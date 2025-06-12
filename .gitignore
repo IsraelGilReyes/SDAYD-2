@@ -1,51 +1,37 @@
-node_modules
-.DS_Store
-dist
-dist-ssr
-dist.zip
-dist.tar
-dist.war
-.nitro
-.output
-*-dist.zip
-*-dist.tar
-*-dist.war
-coverage
-*.local
-**/.vitepress/cache
-.cache
-.turbo
-.temp
-dev-dist
-.stylelintcache
-yarn.lock
-package-lock.json
-.VSCodeCounter
-**/backend-mock/data
-
-# local env files
+# Entorno virtual
+venv/
+.env/
 .env.local
 .env.*.local
-.eslintcache
 
-logs
+# Archivos de Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Django
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-vite.config.mts.*
-vite.config.mjs.*
-vite.config.js.*
-vite.config.ts.*
+local_settings.py
+db.sqlite3
+media/
 
-# Editor directories and files
-.idea
-# .vscode
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-.history
+# Archivos de desarrollo
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de instalación
+pip-delete-this-directory.txt
+
+# Archivos generados por el usuario
+*.sql
+*.sqlite
+
+node_modules/
