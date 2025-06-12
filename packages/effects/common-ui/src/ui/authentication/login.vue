@@ -58,7 +58,7 @@ const [Form, formApi] = useVbenForm(
 );
 const router = useRouter();
 
-const REMEMBER_ME_KEY = REMEMBER_ME_USERNAME_${location.hostname};
+const REMEMBER_ME_KEY = `REMEMBER_ME_USERNAME_${location.hostname}`;
 
 const localUsername = localStorage.getItem(REMEMBER_ME_KEY) || '';
 
@@ -95,13 +95,13 @@ defineExpose({
   <div class="police-login-theme-container" @keydown.enter.prevent="handleSubmit">
     <div class="login-form-wrapper">
       <div class="officer-image-container">
-        <img src="../../../../../../public/images/policer_officer.jpg" alt="Police Officer" class="officer-image" />
+        <img src="../../../../../images/policer_officer.jpg" alt="Police Officer" class="officer-image" />
       </div>
 
       <slot name="title">
         <Title>
           <slot name="title">
-            <span class="main-title-text">{{ title || ${$t('Bienvenidos.')} }}</span>
+          <span class="main-title-text">{{ title || $t('Bienvenidos.') }}</span>
           </slot>
           <template #desc>
             <span class="sub-title-text">
