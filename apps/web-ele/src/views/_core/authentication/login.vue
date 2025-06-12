@@ -87,12 +87,18 @@ const formSchema = computed((): VbenFormSchema[] => {
     },
   ];
 });
+
+async function onSubmit(params: Recordable<any>) {
+  authStore.authLogin(params).catch(() => {
+    // ... resto igual ...
+  });
+}
 </script>
 
 <template>
   <AuthenticationLogin
     :form-schema="formSchema"
     :loading="authStore.loginLoading"
-    @submit="authStore.authLogin"
+    @submit="onSubmit"
   />
 </template>

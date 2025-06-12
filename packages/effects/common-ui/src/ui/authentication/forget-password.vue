@@ -85,7 +85,7 @@ defineExpose({
   <div>
     <Title>
       <slot name="title">
-        {{ title || $t('authentication.forgetPassword') }} 🤦🏻‍♂️
+        {{ title || $t('authentication.forgetPassword') }} 🤦🏻‍♂
       </slot>
       <template #desc>
         <slot name="subTitle">
