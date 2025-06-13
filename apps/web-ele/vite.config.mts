@@ -13,12 +13,12 @@ export default defineConfig(async () => {
       ],
       server: {
         proxy: {
-          '/api': {
+          '^/auth/.*': {
+            target: 'http://localhost:8000',
             changeOrigin: true,
-            rewrite: (path) => path.replace(/^\/api/, ''),
-            // mock代理目标地址
-            target: 'http://localhost:5320/api',
+            secure: false,
             ws: true,
+            rewrite: (path) => path,
           },
         },
       },

@@ -25,6 +25,12 @@ User = get_user_model()
 class LoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
     
+    def get(self, request, *args, **kwargs):
+        return Response({
+            'status': 'success',
+            'message': 'Login endpoint is available'
+        })
+    
     def post(self, request, *args, **kwargs):
         try:
             response = super().post(request, *args, **kwargs)
@@ -58,7 +64,6 @@ class LoginView(TokenObtainPairView):
                     'message': 'Login exitoso'
                 }
             return response
-        #login fallido 
         except Exception as e:
             return Response({
                 'status': 'error',

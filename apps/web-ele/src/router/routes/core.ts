@@ -36,7 +36,17 @@ const coreRoutes: RouteRecordRaw[] = [
     name: 'Root',
     path: '/',
     redirect: preferences.app.defaultHomePath,
-    children: [],
+    children: [
+      {
+        name: 'Dashboard',
+        path: 'dashboard',
+        component: () => import('#/views/dashboard/index.vue'),
+        meta: {
+          title: 'Dashboard',
+          requiresAuth: true,
+        },
+      },
+    ],
   },
   {
     component: AuthPageLayout,

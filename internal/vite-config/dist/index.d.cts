@@ -1,1 +1,1 @@
-export * from "C:/Users/maril/Desktop/SDAYD-2/internal/vite-config/src/index.js";
+export * from "C:/Users/SAYURI/OneDrive/Escritorio/SDAYD-2/internal/vite-config/src/index.js";

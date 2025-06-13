@@ -3,7 +3,7 @@ import { createJiti } from "../../../../../../node_modules/.pnpm/jiti@2.4.2/node
 const jiti = createJiti(import.meta.url, {
   "interopDefault": true,
   "alias": {
-    "@vben-core/shared": "C:/Users/maril/Desktop/SDAYD-2/packages/@core/base/shared"
+    "@vben-core/shared": "C:/Users/SAYURI/OneDrive/Escritorio/SDAYD-2/packages/@core/base/shared"
   },
   "transformOptions": {
     "babel": {
@@ -12,7 +12,7 @@ const jiti = createJiti(import.meta.url, {
   }
 })
 
-/** @type {import("C:/Users/maril/Desktop/SDAYD-2/packages/@core/base/shared/src/cache/index.js")} */
-const _module = await jiti.import("C:/Users/maril/Desktop/SDAYD-2/packages/@core/base/shared/src/cache/index.ts");
+/** @type {import("C:/Users/SAYURI/OneDrive/Escritorio/SDAYD-2/packages/@core/base/shared/src/cache/index.js")} */
+const _module = await jiti.import("C:/Users/SAYURI/OneDrive/Escritorio/SDAYD-2/packages/@core/base/shared/src/cache/index.ts");
 
 export const StorageManager = _module.StorageManager;

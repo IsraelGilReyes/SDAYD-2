@@ -4,13 +4,12 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { LOGIN_PATH } from '@vben/constants';
-import { preferences } from '@vben/preferences';
 import { resetAllStores, useAccessStore, useUserStore } from '@vben/stores';
 
 import { ElNotification } from 'element-plus';
 import { defineStore } from 'pinia';
 
-import { getAccessCodesApi, getUserInfoApi, loginApi, logoutApi } from '#/api';
+import { getUserInfoApi, loginApi, logoutApi } from '#/api';
 import { $t } from '#/locales';
 
 export const useAuthStore = defineStore('auth', () => {
@@ -29,46 +28,71 @@ export const useAuthStore = defineStore('auth', () => {
     params: Recordable<any>,
     onSuccess?: () => Promise<void> | void,
   ) {
-    // 异步处理用户登录操作并获取 accessToken
     let userInfo: null | UserInfo = null;
     try {
       loginLoading.value = true;
-      const { accessToken } = await loginApi(params);
+      const response = await loginApi(params);
 
-      // 如果成功获取到 accessToken
-      if (accessToken) {
-        // 将 accessToken 存储到 accessStore 中
-        accessStore.setAccessToken(accessToken);
-
-        // 获取用户信息并存储到 accessStore 中
-        const [fetchUserInfoResult, accessCodes] = await Promise.all([
-          fetchUserInfo(),
-          getAccessCodesApi(),
-        ]);
-
-        userInfo = fetchUserInfoResult;
+      // Verificar si la respuesta es exitosa
+      if (response && response.status === 'success') {
+        // Guardar la información del usuario
+        userInfo = {
+          username: response.user.username,
+          realName: response.user.username,
+          avatar: '',
+          userId: response.user.id.toString(),
+          roles: [],
+          desc: '',
+          homePath: '/dashboard',
+          token: '',
+        };
 
         userStore.setUserInfo(userInfo);
-        accessStore.setAccessCodes(accessCodes);
 
-        if (accessStore.loginExpired) {
-          accessStore.setLoginExpired(false);
-        } else {
-          onSuccess
-            ? await onSuccess?.()
-            : await router.push(
-                userInfo.homePath || preferences.app.defaultHomePath,
-              );
-        }
+        // Redirigir al dashboard
+        await router.push('/dashboard');
 
-        if (userInfo?.realName) {
-          ElNotification({
-            message: `${$t('authentication.loginSuccessDesc')}:${userInfo?.realName}`,
-            title: $t('authentication.loginSuccess'),
-            type: 'success',
-          });
+        ElNotification({
+          message: response.message || $t('authentication.loginSuccessDesc'),
+          title: $t('authentication.loginSuccess'),
+          type: 'success',
+        });
+
+        if (onSuccess) {
+          await onSuccess();
         }
+      } else {
+        // Manejar respuesta no exitosa
+        const errorMessage = response?.message || $t('authentication.loginFailed');
+        ElNotification({
+          message: errorMessage,
+          title: $t('authentication.loginFailed'),
+          type: 'error',
+        });
       }
+    } catch (error: any) {
+      console.error('Login error:', error);
+      
+      let errorMessage = $t('authentication.loginFailed');
+      if (error.response) {
+        // Error de respuesta del servidor S
+        if (error.response.status === 401) {
+          errorMessage = $t('authentication.invalidCredentials');
+        } else if (error.response.status === 400) {
+          errorMessage = error.response.data?.message || $t('authentication.invalidCredentials');
+        } else {
+          errorMessage = error.response.data?.message || error.response.data?.error || errorMessage;
+        }
+      } else if (error.request) {
+        // Error de red (no se recibió respuesta)
+        errorMessage = $t('authentication.connectionError');
+      }
+
+      ElNotification({
+        message: errorMessage,
+        title: $t('authentication.loginFailed'),
+        type: 'error',
+      });
     } finally {
       loginLoading.value = false;
     }
@@ -81,27 +105,35 @@ export const useAuthStore = defineStore('auth', () => {
   async function logout(redirect: boolean = true) {
     try {
       await logoutApi();
-    } catch {
-      // 不做任何处理
-    }
-    resetAllStores();
-    accessStore.setLoginExpired(false);
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      resetAllStores();
+      accessStore.setLoginExpired(false);
 
-    // 回登录页带上当前路由地址
-    await router.replace({
-      path: LOGIN_PATH,
-      query: redirect
-        ? {
-            redirect: encodeURIComponent(router.currentRoute.value.fullPath),
-          }
-        : {},
-    });
+      await router.replace({
+        path: LOGIN_PATH,
+        query: redirect
+          ? {
+              redirect: encodeURIComponent(router.currentRoute.value.fullPath),
+            }
+          : {},
+      });
+    }
   }
 
   async function fetchUserInfo() {
     let userInfo: null | UserInfo = null;
-    userInfo = await getUserInfoApi();
-    userStore.setUserInfo(userInfo);
+    try {
+      userInfo = await getUserInfoApi();
+      userStore.setUserInfo(userInfo);
+    } catch (error) {
+      console.error('Error fetching user info:', error);
+      ElNotification({
+        message: $t('authentication.fetchUserInfoError'),
+        type: 'error',
+      });
+    }
     return userInfo;
   }
 

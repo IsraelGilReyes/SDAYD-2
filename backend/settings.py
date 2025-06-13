@@ -26,17 +26,36 @@ SECRET_KEY = 'django-insecure-cezmbvb8!gt@5wqj1n=+y*y=h1yb5o^!z8h1iyhed85y&&!gfb
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
-CORS_ALLOW_ALL_ORIGINS = True  # Solo para desarrollo
-
-'''CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8080",  # Puerto de desarrollo Vue
-    "http://127.0.0.1:8080",
+# Configuración de CORS
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # Puerto de desarrollo Vite
+    "http://127.0.0.1:5173",
 ]
-'''
 
-CORS_ALLOW_CREDENTIALS = True  # Si necesitas enviar cookies
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
 
 # Application definition
@@ -56,15 +75,15 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # Debe estar lo más arriba posible
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',  # Debe estar antes de CommonMiddleware
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'authentication.middleware.DisableCSRFForAPI',  # Middleware personalizado al final
+    'authentication.middleware.DisableCSRFForAPI',
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -173,3 +192,6 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',  # Todas las vistas requieren auth por defecto
     ),
 }
+
+# Configuración de Django
+APPEND_SLASH = False  # Desactivar la redirección automática a URLs con barra diagonal

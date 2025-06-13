@@ -1,2 +1,2 @@
-export * from "C:/Users/maril/Desktop/SDAYD-2/scripts/vsh/src/index.js";
-export { default } from "C:/Users/maril/Desktop/SDAYD-2/scripts/vsh/src/index.js";
+export * from "C:/Users/SAYURI/OneDrive/Escritorio/SDAYD-2/scripts/vsh/src/index.js";
+export { default } from "C:/Users/SAYURI/OneDrive/Escritorio/SDAYD-2/scripts/vsh/src/index.js";
