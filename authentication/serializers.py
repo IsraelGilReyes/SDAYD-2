@@ -50,7 +50,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             "error": "Credenciales inválidas",
             "code": "invalid_credentials"
         })
-        #return data
+        
 
 
 class UserSerializer(serializers.ModelSerializer):

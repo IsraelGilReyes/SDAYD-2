@@ -1,2 +1,2 @@
-export * from "C:/Users/SAYURI/OneDrive/Escritorio/SDAYD-2/internal/tailwind-config/src/postcss.config.js";
-export { default } from "C:/Users/SAYURI/OneDrive/Escritorio/SDAYD-2/internal/tailwind-config/src/postcss.config.js";
+export * from "/home/darkar/Escritorio/SDAYD-2/internal/tailwind-config/src/postcss.config.js";
+export { default } from "/home/darkar/Escritorio/SDAYD-2/internal/tailwind-config/src/postcss.config.js";

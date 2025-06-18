@@ -1,3 +1,7 @@
+
+
+//apps/web-ele/src/store/auth.ts
+
 import type { Recordable, UserInfo } from '@vben/types';
 
 import { ref } from 'vue';
@@ -11,6 +15,8 @@ import { defineStore } from 'pinia';
 
 import { getUserInfoApi, loginApi, logoutApi } from '#/api';
 import { $t } from '#/locales';
+//import { to } from '@vben/utils';
+
 
 export const useAuthStore = defineStore('auth', () => {
   const accessStore = useAccessStore();
@@ -24,84 +30,96 @@ export const useAuthStore = defineStore('auth', () => {
    * Asynchronously handle the login process
    * @param params 登录表单数据
    */
-  async function authLogin(
-    params: Recordable<any>,
-    onSuccess?: () => Promise<void> | void,
-  ) {
-    let userInfo: null | UserInfo = null;
-    try {
-      loginLoading.value = true;
-      const response = await loginApi(params);
+  
 
-      // Verificar si la respuesta es exitosa
-      if (response && response.status === 'success') {
-        // Guardar la información del usuario
-        userInfo = {
-          username: response.user.username,
-          realName: response.user.username,
-          email: response.user.email,
-          avatar: '',
-          userId: response.user.id.toString(),
-          roles: [],
-          desc: '',
-          homePath: '/dashboard',
-          token: '',
-        };
+async function authLogin(
+  params: Recordable<any>,
+  onSuccess?: () => Promise<void> | void,
+) {
+  let userInfo: null | UserInfo = null;
+  //const accessStore = useAccessStore();
 
-        userStore.setUserInfo(userInfo);
+  try {
+    loginLoading.value = true;
+    const response = await loginApi(params);
 
-        // Redirigir al dashboard
-        await router.push('/dashboard');
-
-        ElNotification({
-          message: response.message || $t('authentication.loginSuccessDesc'),
-          title: $t('authentication.loginSuccess'),
-          type: 'success',
-        });
-
-        if (onSuccess) {
-          await onSuccess();
-        }
+    // Verificar si la respuesta es exitosa
+    if (response && response.status === 'success') {
+      // Guardar token si viene en la respuesta
+      // 🔐 Guardar el token recibido en el accessStore
+      const token = response.access;
+      if (token) {
+        useAccessStore().setAccessToken(token);
       } else {
-        // Manejar respuesta no exitosa
-        const errorMessage = response?.message || $t('authentication.loginFailed');
-        ElNotification({
-          message: errorMessage,
-          title: $t('authentication.loginFailed'),
-          type: 'error',
-        });
-      }
-    } catch (error: any) {
-      console.error('Login error:', error);
-      
-      let errorMessage = $t('authentication.loginFailed');
-      if (error.response) {
-        // Error de respuesta del servidor S
-        if (error.response.status === 401) {
-          errorMessage = $t('authentication.invalidCredentials');
-        } else if (error.response.status === 400) {
-          errorMessage = error.response.data?.message || $t('authentication.invalidCredentials');
-        } else {
-          errorMessage = error.response.data?.message || error.response.data?.error || errorMessage;
-        }
-      } else if (error.request) {
-        // Error de red (no se recibió respuesta)
-        errorMessage = $t('authentication.connectionError');
+        console.error('Token de acceso ausente en la respuesta.');
       }
 
+      // Guardar la información del usuario
+      userInfo = {
+        username: response.user.username,
+        realName: response.user.username,
+        email: response.user.email,
+        avatar: '',
+        userId: response.user.id.toString(),
+        roles: [],
+        desc: '',
+        homePath: '/dashboard',
+        token: token || '',
+      };
+
+      userStore.setUserInfo(userInfo);
+
+      // Redirigir al dashboard
+      await router.push('/dashboard');
+
+      ElNotification({
+        message: response.message || $t('authentication.loginSuccessDesc'),
+        title: $t('authentication.loginSuccess'),
+        type: 'success',
+      });
+
+      if (onSuccess) {
+        await onSuccess();
+      }
+    } else {
+      // Manejar respuesta no exitosa
+      const errorMessage = response?.message || $t('authentication.loginFailed');
       ElNotification({
         message: errorMessage,
         title: $t('authentication.loginFailed'),
         type: 'error',
       });
-    } finally {
-      loginLoading.value = false;
+    }
+  } catch (error: any) {
+    console.error('Login error:', error);
+
+    let errorMessage = $t('authentication.loginFailed');
+    if (error.response) {
+      if (error.response.status === 401) {
+        errorMessage = $t('authentication.invalidCredentials');
+      } else if (error.response.status === 400) {
+        errorMessage = error.response.data?.message || $t('authentication.invalidCredentials');
+      } else {
+        errorMessage = error.response.data?.message || error.response.data?.error || errorMessage;
+      }
+    } else if (error.request) {
+      errorMessage = $t('authentication.connectionError');
     }
 
-    return {
-      userInfo,
-    };
+    ElNotification({
+      message: errorMessage,
+      title: $t('authentication.loginFailed'),
+      type: 'error',
+    });
+  } finally {
+    loginLoading.value = false;
   }
+
+  return {
+    userInfo,
+  };
+}
+
 
   async function logout(redirect: boolean = true) {
     try {

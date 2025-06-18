@@ -1,16 +1,24 @@
+// Tipos importados de axios
 import type { AxiosInstance, AxiosResponse } from 'axios';
 
+// Tipos personalizados del cliente de peticiones
 import type { RequestClientConfig, RequestClientOptions } from './types';
 
+// Funciones utilitarias
 import { bindMethods, isString, merge } from '@vben/utils';
 
 import axios from 'axios';
 import qs from 'qs';
 
+// Módulos para manejar descargas, interceptores y cargas de archivos
 import { FileDownloader } from './modules/downloader';
 import { InterceptorManager } from './modules/interceptor';
 import { FileUploader } from './modules/uploader';
 
+/**
+ * Función auxiliar para obtener el serializador de parámetros.
+ * Permite personalizar cómo se formatean los arrays en las URLs.
+ */
 function getParamsSerializer(
   paramsSerializer: RequestClientOptions['paramsSerializer'],
 ) {
@@ -18,76 +26,93 @@ function getParamsSerializer(
     switch (paramsSerializer) {
       case 'brackets': {
         return (params: any) =>
-          qs.stringify(params, { arrayFormat: 'brackets' });
+          qs.stringify(params, { arrayFormat: 'brackets' }); // ?a[]=1&a[]=2
       }
       case 'comma': {
-        return (params: any) => qs.stringify(params, { arrayFormat: 'comma' });
+        return (params: any) => qs.stringify(params, { arrayFormat: 'comma' }); // ?a=1,2
       }
       case 'indices': {
         return (params: any) =>
-          qs.stringify(params, { arrayFormat: 'indices' });
+          qs.stringify(params, { arrayFormat: 'indices' }); // ?a[0]=1&a[1]=2
       }
       case 'repeat': {
-        return (params: any) => qs.stringify(params, { arrayFormat: 'repeat' });
+        return (params: any) => qs.stringify(params, { arrayFormat: 'repeat' }); // ?a=1&a=2
       }
     }
   }
+  // Si ya es una función personalizada, la devuelve directamente
   return paramsSerializer;
 }
 
+/**
+ * Clase principal para el cliente de peticiones HTTP basado en Axios.
+ */
 class RequestClient {
+  // Métodos públicos para agregar interceptores
   public addRequestInterceptor: InterceptorManager['addRequestInterceptor'];
-
   public addResponseInterceptor: InterceptorManager['addResponseInterceptor'];
+
+  // Método para descargar archivos
   public download: FileDownloader['download'];
 
-  // 是否正在刷新token
+  // Estado para saber si se está renovando el token
   public isRefreshing = false;
-  // 刷新token队列
+
+  // Cola para almacenar funciones a ejecutar una vez que se renueve el token
   public refreshTokenQueue: ((token: string) => void)[] = [];
+
+  // Método para subir archivos
   public upload: FileUploader['upload'];
+
+  // Instancia interna de Axios
   private readonly instance: AxiosInstance;
 
   /**
-   * 构造函数，用于创建Axios实例
-   * @param options - Axios请求配置，可选
+   * Constructor: configura la instancia de Axios con opciones personalizadas
    */
   constructor(options: RequestClientOptions = {}) {
-    // 合并默认配置和传入的配置
+    // Configuración por defecto del cliente
     const defaultConfig: RequestClientOptions = {
       headers: {
         'Content-Type': 'application/json;charset=utf-8',
       },
-      responseReturn: 'raw',
-      // 默认超时时间
-      timeout: 10_000,
+      responseReturn: 'raw', // Devuelve la respuesta completa por defecto
+      timeout: 10_000, // Tiempo de espera: 10 segundos
     };
+
+    // Mezcla la configuración por defecto con la configuración personalizada
     const { ...axiosConfig } = options;
     const requestConfig = merge(axiosConfig, defaultConfig);
+
+    // Configura la forma en que se serializan los parámetros de la URL
     requestConfig.paramsSerializer = getParamsSerializer(
       requestConfig.paramsSerializer,
     );
+
+    // Crea la instancia de Axios
     this.instance = axios.create(requestConfig);
 
+    // Asegura que los métodos de clase mantengan el contexto correcto
     bindMethods(this);
 
-    // 实例化拦截器管理器
+    // Inicializa el manejador de interceptores
     const interceptorManager = new InterceptorManager(this.instance);
     this.addRequestInterceptor =
       interceptorManager.addRequestInterceptor.bind(interceptorManager);
     this.addResponseInterceptor =
       interceptorManager.addResponseInterceptor.bind(interceptorManager);
 
-    // 实例化文件上传器
+    // Inicializa el gestor de subida de archivos
     const fileUploader = new FileUploader(this);
     this.upload = fileUploader.upload.bind(fileUploader);
-    // 实例化文件下载器
+
+    // Inicializa el gestor de descarga de archivos
     const fileDownloader = new FileDownloader(this);
     this.download = fileDownloader.download.bind(fileDownloader);
   }
 
   /**
-   * DELETE请求方法
+   * Método para enviar peticiones DELETE
    */
   public delete<T = any>(
     url: string,
@@ -97,14 +122,14 @@ class RequestClient {
   }
 
   /**
-   * GET请求方法
+   * Método para enviar peticiones GET
    */
   public get<T = any>(url: string, config?: RequestClientConfig): Promise<T> {
     return this.request<T>(url, { ...config, method: 'GET' });
   }
 
   /**
-   * POST请求方法
+   * Método para enviar peticiones POST
    */
   public post<T = any>(
     url: string,
@@ -115,7 +140,7 @@ class RequestClient {
   }
 
   /**
-   * PUT请求方法
+   * Método para enviar peticiones PUT
    */
   public put<T = any>(
     url: string,
@@ -126,7 +151,7 @@ class RequestClient {
   }
 
   /**
-   * 通用的请求方法
+   * Método genérico para enviar cualquier tipo de petición
    */
   public async request<T>(
     url: string,
@@ -140,8 +165,10 @@ class RequestClient {
           ? { paramsSerializer: getParamsSerializer(config.paramsSerializer) }
           : {}),
       });
+      // Retorna directamente la respuesta o los datos según la configuración
       return response as T;
     } catch (error: any) {
+      // Si hay un error de red o del servidor, lanza el mensaje de error adecuado
       throw error.response ? error.response.data : error;
     }
   }

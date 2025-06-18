@@ -30,11 +30,17 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 # Configuración de CORS
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Puerto de desarrollo Vite
-    "http://127.0.0.1:5173",
+    "http://localhost:5777",  # Puerto de desarrollo Vite
+    "http://127.0.0.1:5777",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+# Configuración de cookies
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'  # O 'None' si usas HTTPS
+CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SECURE = False    # True en producción con HTTPS
+CSRF_COOKIE_SECURE = False       # True en producción con HTTPS
 
 CORS_ALLOW_METHODS = [
     'DELETE',
@@ -70,6 +76,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',  # Para manejar CORS
     'rest_framework_simplejwt',  # Para JWT
+    'rest_framework_simplejwt.token_blacklist', # Para manejar la lista negra de tokens JWT
     'authentication',
     'dashboard',
 ]
@@ -186,7 +193,8 @@ SIMPLE_JWT = {
 # Configuración de REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication', # Para manejar JWT
+        'rest_framework.authentication.SessionAuthentication', # Para manejar sesiones de Django
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',  # Todas las vistas requieren auth por defecto

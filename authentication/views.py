@@ -17,6 +17,9 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from datetime import datetime, timedelta
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
+from rest_framework_simplejwt.tokens import OutstandingToken, BlacklistedToken, RefreshToken
+
 
 
 User = get_user_model()
@@ -56,13 +59,15 @@ class LoginView(TokenObtainPairView):
                     samesite='Strict',
                     max_age=24 * 3600  # 24 horas
                 )
-                
-                # Eliminar tokens de la respuesta JSON para mayor seguridad
+                # 🔥 Mantener los tokens en el body para el frontend
                 response.data = {
-                    'status': 'success',
-                    'user': response.data.get('user', {}),
-                    'message': 'Login exitoso'
-                }
+                'status': 'success',
+                'user': response.data.get('user', {}),
+                'access': access_token,
+                'refresh': refresh_token,
+                'message': 'Login exitoso'
+            }
+            
             return response
         except Exception as e:
             return Response({
@@ -132,32 +137,38 @@ def register(request):
         'errors': serializer.errors
     }, status=status.HTTP_400_BAD_REQUEST)
 
-# Vista de Logout
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def logout(request):
     try:
-        # Obtener el token de refresco de la cookie
+        # Invalidar refresh token (desde cookies)
         refresh_token = request.COOKIES.get('refresh_token')
         if refresh_token:
-            token = RefreshToken(refresh_token)
-            token.blacklist()
-            
+            try:
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+            except Exception as e:
+                print(f"Error al invalidar refresh token: {str(e)}")
+
         response = Response({
             'status': 'success',
             'message': 'Logout exitoso'
         }, status=status.HTTP_200_OK)
-        
-        # Eliminar las cookies
+
+        # Limpiar cookies
         response.delete_cookie('access_token')
         response.delete_cookie('refresh_token')
-        
+        response.delete_cookie('csrftoken')
+
         return response
-    except Exception:
+
+    except Exception as e:
+        print(f"Error en logout: {str(e)}")
         return Response({
             'status': 'error',
             'message': 'Error al cerrar sesión'
         }, status=status.HTTP_400_BAD_REQUEST)
+
 
 # Vista para listar roles en donde hay ACCESO RESTRINGIDO
 @api_view(['GET'])

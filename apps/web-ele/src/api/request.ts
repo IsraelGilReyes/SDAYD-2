@@ -1,37 +1,42 @@
 /**
- * 该文件可自行根据业务逻辑进行调整
+ * apps/web-ele/src/api/request.ts
+ * Este archivo puede ser modificado libremente según la lógica del negocio
  */
 import type { RequestClientOptions } from '@vben/request';
 
 import { useAppConfig } from '@vben/hooks';
 import { preferences } from '@vben/preferences';
 import {
-  authenticateResponseInterceptor,
-  errorMessageResponseInterceptor,
-  RequestClient,
+  authenticateResponseInterceptor, // Interceptor para manejar autenticación (e.g., renovación de token)
+  errorMessageResponseInterceptor, // Interceptor para mostrar errores de forma amigable
+  RequestClient, // Cliente HTTP personalizado
 } from '@vben/request';
 import { useAccessStore } from '@vben/stores';
 import { LOGIN_PATH } from '@vben/constants';
 
-import { ElMessage } from 'element-plus';
-import { useRouter } from 'vue-router';
+import { ElMessage } from 'element-plus'; // Para mostrar mensajes de error
+import { useRouter } from 'vue-router'; // Para redirecciones en caso de error (por ejemplo, a login)
 
 import { useAuthStore } from '#/store';
-import { $t } from '#/locales';
+import { $t } from '#/locales'; // Función para traducción (i18n)
 
-import { refreshTokenApi } from './core';
+import { refreshTokenApi } from './core'; // API para renovar el token
 
+// Obtiene la URL base del API desde la configuración de la aplicación
 const { apiURL } = useAppConfig(import.meta.env, import.meta.env.PROD);
 
-// Configuración de la URL base del API
-const API_BASE_URL = '';  // Cambiado a string vacío ya que usamos rutas relativas
+// Se define manualmente como cadena vacía para usar rutas relativas
+const API_BASE_URL = 'http://localhost:8000/';
 
+/**
+ * Función para crear una instancia personalizada de RequestClient
+ */
 function createRequestClient(baseURL: string, options?: RequestClientOptions) {
   const client = new RequestClient({
     ...options,
     baseURL: API_BASE_URL,
-    withCredentials: true,
-    timeout: 10000, // 10 segundos de timeout
+    withCredentials: true, // Enviar cookies con cada petición
+    timeout: 10000, // Tiempo máximo de espera: 10 segundos
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -40,25 +45,28 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
   });
 
   /**
-   * 重新认证逻辑
+   * Función que se ejecuta cuando el token de acceso no es válido o ha expirado
    */
   async function doReAuthenticate() {
-    console.warn('Access token or refresh token is invalid or expired. ');
+    console.warn('El access token o refresh token es inválido o ha expirado.');
     const accessStore = useAccessStore();
     const authStore = useAuthStore();
     accessStore.setAccessToken(null);
+    
     if (
       preferences.app.loginExpiredMode === 'modal' &&
       accessStore.isAccessChecked
     ) {
+      // Mostrar modal de sesión expirada
       accessStore.setLoginExpired(true);
     } else {
+      // Cierra sesión directamente
       await authStore.logout();
     }
   }
 
   /**
-   * 刷新token逻辑
+   * Lógica para renovar el token de acceso utilizando un refresh token
    */
   async function doRefreshToken() {
     const accessStore = useAccessStore();
@@ -68,25 +76,41 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
     return newToken;
   }
 
+  // Formatea el token para el encabezado Authorization
   function formatToken(token: null | string) {
     return token ? `Bearer ${token}` : null;
   }
 
-  // 请求头处理
+  // Interceptor para añadir cabeceras antes de enviar una solicitud
   client.addRequestInterceptor({
-    fulfilled: async (config) => {
-      const accessStore = useAccessStore();
+  fulfilled: async (config) => {
+    const accessStore = useAccessStore();
+    
+    // Excluir rutas públicas que no necesitan token
+    const publicRoutes = ['/auth/login/', '/auth/refresh/'];
+    const isPublicRoute = publicRoutes.some(route => config.url?.includes(route));
+    
+    if (!isPublicRoute && accessStore.accessToken) {
+      config.headers.Authorization = `Bearer ${accessStore.accessToken}`;
+    }
+    
+    // Configuración especial para logout
+    if (config.url?.includes('/auth/logout/')) {
+      config.withCredentials = true;
+      // Forzar el envío del token incluso si el interceptor falló
+      if (!config.headers.Authorization && accessStore.accessToken) {
+        config.headers.Authorization = `Bearer ${accessStore.accessToken}`;
+      }
+    }
+    
+    return config;
+  }
+});
 
-      config.headers.Authorization = formatToken(accessStore.accessToken);
-      config.headers['Accept-Language'] = preferences.app.locale;
-      return config;
-    },
-  });
-
-  // 处理返回的响应数据格式
+  // Interceptor para manejar las respuestas exitosas
   client.addResponseInterceptor({
     fulfilled: (response) => {
-      // Si la respuesta es exitosa, devolver los datos directamente
+      // Si la respuesta fue exitosa, devolver solo los datos
       if (response.status >= 200 && response.status < 300) {
         return response.data;
       }
@@ -97,45 +121,43 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
     },
   });
 
-  // token过期的处理
+  // Interceptor para manejar la expiración del token
   client.addResponseInterceptor(
     authenticateResponseInterceptor({
       client,
-      doReAuthenticate,
-      doRefreshToken,
-      enableRefreshToken: preferences.app.enableRefreshToken,
+      doReAuthenticate, // Qué hacer si la autenticación falla
+      doRefreshToken,   // Qué hacer si se necesita renovar el token
+      enableRefreshToken: preferences.app.enableRefreshToken, // ¿Se permite usar refresh token?
       formatToken,
     }),
   );
 
-  // 通用的错误处理,如果没有进入上面的错误处理逻辑，就会进入这里
+  // Interceptor para errores genéricos, muestra mensajes amigables
   client.addResponseInterceptor(
     errorMessageResponseInterceptor((msg: string, error) => {
-      // 这里可以根据业务进行定制,你可以拿到 error 内的信息进行定制化处理，根据不同的 code 做不同的提示，而不是直接使用 message.error 提示 msg
-      // 当前mock接口返回的错误字段是 error 或者 message
       const responseData = error?.response?.data ?? {};
       const errorMessage = responseData?.error ?? responseData?.message ?? msg;
-      // 如果没有错误信息，则会根据状态码进行提示
-      ElMessage.error(errorMessage);
+      ElMessage.error(errorMessage); // Muestra mensaje de error al usuario
     }),
   );
 
-  // Interceptor para manejar errores de red
+  // Interceptor para errores específicos de red y autenticación
   client.addResponseInterceptor({
     rejected: (error: any) => {
       const router = useRouter();
       
       if (!error.response) {
+        // No hay conexión con el servidor
         ElMessage.error($t('authentication.connectionError'));
       } else if (error.response.status === 401) {
+        // No autorizado
         ElMessage.error($t('authentication.unauthorized'));
-        // Redirigir al login si no estamos ya en esa página
         const currentPath = window.location.pathname;
         if (!currentPath.includes(LOGIN_PATH)) {
           router.replace({
             path: LOGIN_PATH,
             query: {
-              redirect: encodeURIComponent(currentPath),
+              redirect: encodeURIComponent(currentPath), // Guarda la ruta original para volver luego
             },
           });
         }
@@ -153,8 +175,10 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
   return client;
 }
 
+// Crea y exporta el cliente principal de solicitudes (con interceptores y lógica personalizada)
 export const requestClient = createRequestClient(apiURL, {
-  responseReturn: 'data',
+  responseReturn: 'data', // Solo retorna la propiedad 'data' de la respuesta
 });
 
-export const baseRequestClient = new RequestClient({ baseURL: apiURL });
+// Cliente base sin interceptores, más simple
+export const baseRequestClient = new RequestClient({ baseURL: API_BASE_URL, withCredentials: true });
