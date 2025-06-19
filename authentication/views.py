@@ -24,57 +24,59 @@ from rest_framework_simplejwt.tokens import OutstandingToken, BlacklistedToken, 
 
 User = get_user_model()
 
-@method_decorator(csrf_exempt, name='dispatch')
+# Vista de Login
+@method_decorator(csrf_exempt, name='dispatch')  # si no usas CSRF, o si estás en desarrollo
 class LoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
-    
+
     def get(self, request, *args, **kwargs):
         return Response({
             'status': 'success',
             'message': 'Login endpoint is available'
         })
-    
+
     def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
         try:
-            response = super().post(request, *args, **kwargs)
-            if response.status_code == 200:
-                # Configurar cookies HttpOnly
-                access_token = response.data['access']
-                refresh_token = response.data['refresh']
-                
-                response.set_cookie(
-                    'access_token',
-                    access_token,
-                    httponly=True,
-                    secure=True,
-                    samesite='Strict',
-                    max_age=3600  # 1 hora
-                )
-                
-                response.set_cookie(
-                    'refresh_token',
-                    refresh_token,
-                    httponly=True,
-                    secure=True,
-                    samesite='Strict',
-                    max_age=24 * 3600  # 24 horas
-                )
-                # 🔥 Mantener los tokens en el body para el frontend
-                response.data = {
-                'status': 'success',
-                'user': response.data.get('user', {}),
-                'access': access_token,
-                'refresh': refresh_token,
-                'message': 'Login exitoso'
-            }
-            
-            return response
+            serializer.is_valid(raise_exception=True)
         except Exception as e:
             return Response({
                 'status': 'error',
                 'message': 'Credenciales inválidas',
                 'detail': str(e)
             }, status=status.HTTP_401_UNAUTHORIZED)
+
+        access_token = serializer.validated_data.get('access')
+        refresh_token = serializer.validated_data.get('refresh')
+        user_data = serializer.validated_data.get('user', {})
+
+        response = Response({
+            'status': 'success',
+            'message': 'Login exitoso',
+            'user': user_data
+        }, status=status.HTTP_200_OK)
+
+        # Crear cookies HttpOnly
+        response.set_cookie(
+            key='access_token',
+            value=access_token,
+            httponly=True,
+            secure=False,  # ⚠️ pon True si usas HTTPS
+            samesite='Strict',
+            max_age=60 * 60  # 1 hora
+        )
+
+        response.set_cookie(
+            key='refresh_token',
+            value=refresh_token,
+            httponly=True,
+            secure=False,  # ⚠️ pon True si usas HTTPS
+            samesite='Strict',
+            max_age=24 * 60 * 60  # 24 horas
+        )
+
+        return response
 
 # Vista de Registro
 @api_view(['POST'])
@@ -137,37 +139,33 @@ def register(request):
         'errors': serializer.errors
     }, status=status.HTTP_400_BAD_REQUEST)
 
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def logout(request):
-    try:
-        # Invalidar refresh token (desde cookies)
-        refresh_token = request.COOKIES.get('refresh_token')
-        if refresh_token:
-            try:
-                token = RefreshToken(refresh_token)
-                token.blacklist()
-            except Exception as e:
-                print(f"Error al invalidar refresh token: {str(e)}")
+    refresh_token = request.COOKIES.get('refresh_token')
 
-        response = Response({
-            'status': 'success',
-            'message': 'Logout exitoso'
-        }, status=status.HTTP_200_OK)
+    # Siempre eliminamos las cookies
+    response = Response({
+        'status': 'success',
+        'message': 'Logout exitoso'
+    }, status=status.HTTP_200_OK)
 
-        # Limpiar cookies
-        response.delete_cookie('access_token')
-        response.delete_cookie('refresh_token')
-        response.delete_cookie('csrftoken')
+    response.delete_cookie('access_token', samesite='Strict')
+    response.delete_cookie('refresh_token', samesite='Strict')
+    response.delete_cookie('csrftoken')
 
-        return response
+    # Intentamos invalidar el token si existe
+    if refresh_token:
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+        except Exception as e:
+            print(f"Token ya inválido o expirado: {e}")
 
-    except Exception as e:
-        print(f"Error en logout: {str(e)}")
-        return Response({
-            'status': 'error',
-            'message': 'Error al cerrar sesión'
-        }, status=status.HTTP_400_BAD_REQUEST)
+    return response
+
+
 
 
 # Vista para listar roles en donde hay ACCESO RESTRINGIDO

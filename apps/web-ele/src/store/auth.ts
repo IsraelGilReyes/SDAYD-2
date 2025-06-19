@@ -30,29 +30,21 @@ export const useAuthStore = defineStore('auth', () => {
    * Asynchronously handle the login process
    * @param params 登录表单数据
    */
-  
 
-async function authLogin(
+  async function authLogin(
   params: Recordable<any>,
   onSuccess?: () => Promise<void> | void,
 ) {
   let userInfo: null | UserInfo = null;
-  //const accessStore = useAccessStore();
 
   try {
     loginLoading.value = true;
+
+    // 👇 Asegúrate que `loginApi` use `withCredentials: true` en la llamada HTTP
     const response = await loginApi(params);
 
-    // Verificar si la respuesta es exitosa
     if (response && response.status === 'success') {
-      // Guardar token si viene en la respuesta
-      // 🔐 Guardar el token recibido en el accessStore
-      const token = response.access;
-      if (token) {
-        useAccessStore().setAccessToken(token);
-      } else {
-        console.error('Token de acceso ausente en la respuesta.');
-      }
+      // ✅ No guardamos access token, porque ya está en cookie HttpOnly
 
       // Guardar la información del usuario
       userInfo = {
@@ -64,7 +56,8 @@ async function authLogin(
         roles: [],
         desc: '',
         homePath: '/dashboard',
-        token: token || '',
+        // ❌ Ya no se guarda el token
+        token: '',
       };
 
       userStore.setUserInfo(userInfo);
@@ -82,7 +75,6 @@ async function authLogin(
         await onSuccess();
       }
     } else {
-      // Manejar respuesta no exitosa
       const errorMessage = response?.message || $t('authentication.loginFailed');
       ElNotification({
         message: errorMessage,
@@ -121,25 +113,53 @@ async function authLogin(
 }
 
 
-  async function logout(redirect: boolean = true) {
-    try {
-      await logoutApi();
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      resetAllStores();
-      accessStore.setLoginExpired(false);
 
-      await router.replace({
-        path: LOGIN_PATH,
-        query: redirect
-          ? {
-              redirect: encodeURIComponent(router.currentRoute.value.fullPath),
-            }
-          : {},
+  async function logout(redirect: boolean = true) {
+  try {
+    const response = await logoutApi();
+
+    if (response?.data?.status === 'success') {
+      ElNotification({
+        title: $t('logoutSuccess') || 'Sesión cerrada',
+        message: response.message || 'Cierre de sesión exitoso.',
+        type: 'success',
+      });
+    } else {
+      ElNotification({
+        title: $t('authentication.logoutFailed') || 'Error al cerrar sesión',
+        message: response?.message || 'No se pudo cerrar la sesión.',
+        type: 'warning',
       });
     }
+  } catch (error: any) {
+    console.error('Logout error:', error);
+
+    const message =
+      error?.response?.data?.message ||
+      error?.response?.data?.detail ||
+      error?.message ||
+      'Ocurrió un error al cerrar sesión.';
+
+    ElNotification({
+      title: $t('authentication.logoutFailed') || 'Error al cerrar sesión',
+      message,
+      type: 'error',
+    });
+  } finally {
+    resetAllStores();
+    accessStore.setLoginExpired(false);
+
+    await router.replace({
+      path: LOGIN_PATH,
+      query: redirect
+        ? {
+            redirect: encodeURIComponent(router.currentRoute.value.fullPath),
+          }
+        : {},
+    });
   }
+}
+
 
   async function fetchUserInfo() {
     let userInfo: null | UserInfo = null;

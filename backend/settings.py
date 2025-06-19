@@ -174,6 +174,7 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,  # Genera nuevo refresh token al hacer refresh
     'BLACKLIST_AFTER_ROTATION': True,  # Invalida refresh tokens antiguos
     'UPDATE_LAST_LOGIN': True,  # Actualiza last_login en el modelo User
+    'TOKEN_BACKLIST_ENABLED': True,  # Habilita la lista negra de tokens
     
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': 'su_clave_secreta_aqui',  # Usa la SECRET_KEY de Django

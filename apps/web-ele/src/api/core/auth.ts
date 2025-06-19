@@ -2,7 +2,6 @@
 // apps/web-ele/src/api/core/auth.ts
 // Importa dos clientes de solicitud HTTP desde el módulo de peticiones de la aplicación
 import { baseRequestClient, requestClient } from '#/api/request';
-import { useAccessStore } from '@vben/stores';
 
 
 // Define un espacio de nombres (namespace) llamado AuthApi que contiene interfaces relacionadas con la autenticación
@@ -22,8 +21,7 @@ export namespace AuthApi {
     username: string;
     email: string;
   };
-  access?: string; // o access_token
-  refresh?: string; // opcional, si usas refresh tokens
+
 }
 
   /** Resultado al refrescar el token de acceso */
@@ -59,14 +57,9 @@ export async function refreshTokenApi() {
  */
 
   export async function logoutApi() {
-  const accessStore = useAccessStore(); // aquí defines correctamente accessStore
 
   return baseRequestClient.post('/auth/logout/', {}, {
     withCredentials: true,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessStore.accessToken}`,
-    },
   });
 }
 
