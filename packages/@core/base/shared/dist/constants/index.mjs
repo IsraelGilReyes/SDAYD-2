@@ -3,7 +3,7 @@ import { createJiti } from "../../../../../../node_modules/.pnpm/jiti@2.4.2/node
 const jiti = createJiti(import.meta.url, {
   "interopDefault": true,
   "alias": {
-    "@vben-core/shared": "C:/Users/USUARIO/Downloads/SDAYD-2/packages/@core/base/shared"
+    "@vben-core/shared": "/home/darkar/Escritorio/SDAYD-2/packages/@core/base/shared"
   },
   "transformOptions": {
     "babel": {
@@ -12,8 +12,8 @@ const jiti = createJiti(import.meta.url, {
   }
 })
 
-/** @type {import("C:/Users/USUARIO/Downloads/SDAYD-2/packages/@core/base/shared/src/constants/index.js")} */
-const _module = await jiti.import("C:/Users/USUARIO/Downloads/SDAYD-2/packages/@core/base/shared/src/constants/index.ts");
+/** @type {import("/home/darkar/Escritorio/SDAYD-2/packages/@core/base/shared/src/constants/index.js")} */
+const _module = await jiti.import("/home/darkar/Escritorio/SDAYD-2/packages/@core/base/shared/src/constants/index.ts");
 
 export const CSS_VARIABLE_LAYOUT_CONTENT_HEIGHT = _module.CSS_VARIABLE_LAYOUT_CONTENT_HEIGHT;
 export const CSS_VARIABLE_LAYOUT_CONTENT_WIDTH = _module.CSS_VARIABLE_LAYOUT_CONTENT_WIDTH;

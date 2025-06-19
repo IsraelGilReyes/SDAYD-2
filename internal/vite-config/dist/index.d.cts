@@ -1,1 +1,1 @@
-export * from "C:/Users/USUARIO/Downloads/SDAYD-2/internal/vite-config/src/index.js";
+export * from "/home/darkar/Escritorio/SDAYD-2/internal/vite-config/src/index.js";
