@@ -70,7 +70,7 @@ const formSchema = computed((): VbenFormSchema[] => {
                 class: 'vben-link ml-1 ',
                 href: '',
               },
-              ${$t('authentication.privacyPolicy')} & ${$t('authentication.terms')},
+              `${$t('authentication.privacyPolicy')} & ${$t('authentication.terms')}`,
             ),
           ]),
       }),

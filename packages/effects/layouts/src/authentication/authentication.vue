@@ -71,9 +71,21 @@ const { authPanelCenter, authPanelLeft, authPanelRight, isDark } =
       <div
         class="text-foreground lg:text-foreground ml-4 mt-4 flex flex-1 items-center sm:left-6 sm:top-6"
       >
-        <img v-if="logo" :alt="appName" :src="logo" class="mr-2" width="42" />
-        <p v-if="appName" class="m-0 text-xl font-medium">
-          {{ appName }}
+        <!-- Icono local-police de Material Icons -->
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="mr-2"
+          width="42"
+          height="42"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path
+            d="M12 2 4 5v6c0 5.55 3.84 10.74 8 12 4.16-1.26 8-6.45 8-12V5l-8-3zm0 2.18 6 2.25v5.57c0 4.73-3.13 9.13-6 10.19-2.87-1.06-6-5.46-6-10.19V6.43l6-2.25zM12 7c-1.1 0-2 .9-2 2 0 .78.45 1.45 1.1 1.77L11 13h2l-.1-2.23C13.55 10.45 14 9.78 14 9c0-1.1-.9-2-2-2z"
+          />
+        </svg>
+        <p class="m-0 text-xl font-medium">
+          Sistema de Atención y Despacho
         </p>
       </div>
     </div>
@@ -141,9 +153,9 @@ const { authPanelCenter, authPanelLeft, authPanelRight, isDark } =
 .login-background {
   background: linear-gradient(
     154deg,
-    #07070915 30%,
+rgba(14, 50, 139, 0.29) 30%,
     hsl(var(--primary) / 30%) 48%,
-    #07070915 64%
+rgba(18, 56, 134, 0.36) 64%
   );
   filter: blur(100px);
 }
@@ -152,9 +164,9 @@ const { authPanelCenter, authPanelLeft, authPanelRight, isDark } =
   .login-background {
     background: linear-gradient(
       154deg,
-      #07070915 30%,
+rgb(10, 28, 52) 30%,
       hsl(var(--primary) / 20%) 48%,
-      #07070915 64%
+rgb(10, 28, 52) 64%
     );
     filter: blur(100px);
   }

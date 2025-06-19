@@ -3,7 +3,7 @@ import { createJiti } from "../../../../node_modules/.pnpm/jiti@2.4.2/node_modul
 const jiti = createJiti(import.meta.url, {
   "interopDefault": true,
   "alias": {
-    "@vben/eslint-config": "/home/darkar/Escritorio/SDAYD-2/internal/lint-configs/eslint-config"
+    "@vben/eslint-config": "C:/Users/USUARIO/Downloads/SDAYD-2/internal/lint-configs/eslint-config"
   },
   "transformOptions": {
     "babel": {
@@ -12,7 +12,7 @@ const jiti = createJiti(import.meta.url, {
   }
 })
 
-/** @type {import("/home/darkar/Escritorio/SDAYD-2/internal/lint-configs/eslint-config/src/index.js")} */
-const _module = await jiti.import("/home/darkar/Escritorio/SDAYD-2/internal/lint-configs/eslint-config/src/index.ts");
+/** @type {import("C:/Users/USUARIO/Downloads/SDAYD-2/internal/lint-configs/eslint-config/src/index.js")} */
+const _module = await jiti.import("C:/Users/USUARIO/Downloads/SDAYD-2/internal/lint-configs/eslint-config/src/index.ts");
 
 export const defineConfig = _module.defineConfig;

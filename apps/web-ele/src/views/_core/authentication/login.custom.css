@@ -1,0 +1,27 @@
+-/* Estilos personalizados para el login */
+.login-bg-custom {
+  background-color: #131d87 !important;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.login-side-image {
+  max-width: 350px;
+  margin-right: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 24px rgba(10, 10, 10, 0.368);
+}
+
+/* Agregado para el logo de la policía */
+.logo-policia {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo-policia svg {
+  width: 28px;
+  height: 28px;
+  fill: currentColor;
+}

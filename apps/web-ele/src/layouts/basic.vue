@@ -27,28 +27,28 @@ const mostrarModalEditarPerfil = ref(false);
 
 const notifications = ref<NotificationItem[]>([
   {
-    avatar: 'https://avatar.vercel.sh/vercel.svg?text=VB',
+    avatar: '/police-station.jpeg',
     date: '3小时前',
     isRead: true,
     message: '描述信息描述信息描述信息',
     title: '收到了 14 份新周报',
   },
   {
-    avatar: 'https://avatar.vercel.sh/1',
+    avatar: '/police-station.jpeg',
     date: '刚刚',
     isRead: false,
     message: '描述信息描述信息描述信息',
     title: '朱偏右 回复了你',
   },
   {
-    avatar: 'https://avatar.vercel.sh/1',
+    avatar: '/police-station.jpeg',
     date: '2024-01-01',
     isRead: false,
     message: '描述信息描述信息描述信息',
     title: '曲丽丽 评论了你',
   },
   {
-    avatar: 'https://avatar.vercel.sh/satori',
+    avatar: '/police-station.jpeg',
     date: '1天前',
     isRead: false,
     message: '描述信息描述信息描述信息',
@@ -170,9 +170,9 @@ watch(
       >
         <div class="bg-white p-6 rounded-lg shadow-lg w-[90%] max-w-md text-center border border-blue-100">
           <img
-            :src="userStore.userInfo?.avatar ?? preferences.app.defaultAvatar"
-            alt="Avatar del usuario"
-            class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-blue-500"
+            :src="userStore.userInfo?.avatar ?? '/police-station.jpeg'"
+            alt="Estación de policía"
+            class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-green-600"
           />
 
           <h2 class="text-2xl font-bold mb-4 text-gray-800">Mi Perfil</h2>

@@ -3,7 +3,7 @@ import { createJiti } from "../../../node_modules/.pnpm/jiti@2.4.2/node_modules/
 const jiti = createJiti(import.meta.url, {
   "interopDefault": true,
   "alias": {
-    "@vben/turbo-run": "/home/darkar/Escritorio/SDAYD-2/scripts/turbo-run"
+    "@vben/turbo-run": "C:/Users/USUARIO/Downloads/SDAYD-2/scripts/turbo-run"
   },
   "transformOptions": {
     "babel": {
@@ -12,7 +12,7 @@ const jiti = createJiti(import.meta.url, {
   }
 })
 
-/** @type {import("/home/darkar/Escritorio/SDAYD-2/scripts/turbo-run/src/index.js")} */
-const _module = await jiti.import("/home/darkar/Escritorio/SDAYD-2/scripts/turbo-run/src/index.ts");
+/** @type {import("C:/Users/USUARIO/Downloads/SDAYD-2/scripts/turbo-run/src/index.js")} */
+const _module = await jiti.import("C:/Users/USUARIO/Downloads/SDAYD-2/scripts/turbo-run/src/index.ts");
 
 export default _module?.default ?? _module;
