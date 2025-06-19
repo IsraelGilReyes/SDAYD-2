@@ -35,3 +35,6 @@ pip-delete-this-directory.txt
 *.sqlite
 
 node_modules/
+
+# Ignorar todas las carpetas 'dist' en el proyecto
+**/dist/
