@@ -1,4 +1,3 @@
-
 // apps/web-ele/src/api/core/auth.ts
 // Importa dos clientes de solicitud HTTP desde el módulo de peticiones de la aplicación
 import { baseRequestClient, requestClient } from '#/api/request';
@@ -26,8 +25,8 @@ export namespace AuthApi {
 
   /** Resultado al refrescar el token de acceso */
   export interface RefreshTokenResult {
-    data: string; // Nuevo token de acceso
-    status: number; // Código de estado de la respuesta (por ejemplo: 200)
+    status: string;
+    message?: string;
   }
 }
 

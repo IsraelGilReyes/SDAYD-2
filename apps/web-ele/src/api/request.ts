@@ -51,10 +51,27 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
     await authStore.logout(); // Cerrar sesión directamente
   }
 
-  // ❌ Eliminar lógica de refresh token (no se necesita con cookies HttpOnly)
-  // async function doRefreshToken() { ... }
+  // ✅ Implementar lógica de refresh token
+  async function doRefreshToken() {
+    try {
+      console.log('Intentando refrescar el token...');
+      const response = await baseRequestClient.post('/auth/refresh/', {}, {
+        withCredentials: true,
+      });
+      
+      if (response && response.status === 'success') {
+        console.log('Token refrescado exitosamente');
+        return 'success';
+      } else {
+        throw new Error('Error al refrescar token');
+      }
+    } catch (error) {
+      console.error('Error al refrescar token:', error);
+      throw error;
+    }
+  }
 
-  // ❌ Eliminar uso del token en headers Authorization (se usa solo cookies)
+  // ✅ Agregar interceptor para refresh automático
   client.addRequestInterceptor({
     fulfilled: async (config) => {
       // Solo marcar que las cookies deben enviarse en peticiones protegidas
@@ -86,9 +103,6 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
       return Promise.reject(error);
     },
   });
-
-  // ❌ Eliminar el interceptor de refresh automático del token
-  // client.addResponseInterceptor(authenticateResponseInterceptor({ ... }))
 
   // 🧠 Mostrar errores de forma amigable
   client.addResponseInterceptor(
@@ -126,6 +140,34 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
         ElMessage.error($t('authentication.serverError'));
       }
 
+      return Promise.reject(error);
+    }
+  });
+
+  // ✅ Agregar interceptor de refresh automático del token
+  client.addResponseInterceptor({
+    rejected: async (error: any) => {
+      // Si es error 401 y no estamos ya intentando refrescar
+      if (error.response?.status === 401 && !client.isRefreshing) {
+        client.isRefreshing = true;
+        
+        try {
+          // Intentar refrescar el token
+          await doRefreshToken();
+          
+          // Si el refresh fue exitoso, reintentar la petición original
+          const originalRequest = error.config;
+          return client.request(originalRequest.url, originalRequest);
+          
+        } catch (refreshError) {
+          // Si el refresh falla, hacer logout
+          await doReAuthenticate();
+          return Promise.reject(refreshError);
+        } finally {
+          client.isRefreshing = false;
+        }
+      }
+      
       return Promise.reject(error);
     }
   });

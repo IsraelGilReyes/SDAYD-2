@@ -166,6 +166,52 @@ def logout(request):
     return response
 
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def refresh_token(request):
+    """
+    Vista para refrescar el token de acceso usando el refresh token.
+    El refresh token debe estar en las cookies HttpOnly.
+    """
+    refresh_token_value = request.COOKIES.get('refresh_token')
+    
+    if not refresh_token_value:
+        return Response({
+            'status': 'error',
+            'message': 'Refresh token no encontrado'
+        }, status=status.HTTP_401_UNAUTHORIZED)
+    
+    try:
+        # Validar y decodificar el refresh token
+        refresh = RefreshToken(refresh_token_value)
+        
+        # Generar nuevo access token
+        new_access_token = str(refresh.access_token)
+        
+        # Preparar respuesta
+        response = Response({
+            'status': 'success',
+            'message': 'Token refrescado exitosamente'
+        }, status=status.HTTP_200_OK)
+        
+        # Actualizar la cookie del access token
+        response.set_cookie(
+            key='access_token',
+            value=new_access_token,
+            httponly=True,
+            secure=False,  # ⚠️ pon True si usas HTTPS
+            samesite='Strict',
+            max_age=60 * 60  # 1 hora
+        )
+        
+        return response
+        
+    except Exception as e:
+        return Response({
+            'status': 'error',
+            'message': 'Refresh token inválido o expirado',
+            'detail': str(e)
+        }, status=status.HTTP_401_UNAUTHORIZED)
 
 
 # Vista para listar roles en donde hay ACCESO RESTRINGIDO
