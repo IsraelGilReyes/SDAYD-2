@@ -63,6 +63,14 @@ export async function refreshTokenApi() {
 }
 
 
+export async function getUserInfoApi() {
+  return baseRequestClient.get('/auth/info/', {
+    withCredentials: true,
+  });
+}
+
+
+
 
 /**
  * Función para obtener los códigos de acceso (permisos del usuario).
