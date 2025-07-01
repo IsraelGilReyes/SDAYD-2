@@ -325,8 +325,8 @@ catalogs:
       specifier: ^4.2.0
       version: 4.2.0
     pkg-types:
-      specifier: ^2.1.0
-      version: 2.1.0
+      specifier: ^2.2.0
+      version: 2.2.0
     playwright:
       specifier: ^1.52.0
       version: 1.52.0
@@ -910,7 +910,7 @@ importers:
         version: 8.2.0
       pkg-types:
         specifier: 'catalog:'
-        version: 2.1.0
+        version: 2.2.0
       prettier:
         specifier: 'catalog:'
         version: 3.5.3
@@ -6454,6 +6454,9 @@ packages:
   exsolve@1.0.5:
     resolution: {integrity: sha512-pz5dvkYYKQ1AHVrgOzBKWeP4u4FRb3a6DNK2ucr0OoNwYIU4QWsJ+NM36LLzORT+z845MzKHHhpXiUF5nvQoJg==}
 
+  exsolve@1.0.7:
+    resolution: {integrity: sha512-VO5fQUzZtI6C+vx4w/4BWJpg3s/5l+6pRQEHzFRM8WFi4XffSP1Z+4qi7GbjWbvRQEbdIco5mIMq+zX4rPuLrw==}
+
   extend-shallow@2.0.1:
     resolution: {integrity: sha512-zCnTtlxNoAiDc3gqY2aYAWFx7XWWiasuF2K8Me5WbN8otHKTUKBwjPtNpRs/rbUZm7KxWAaNj7P1a/p52GbVug==}
     engines: {node: '>=0.10.0'}
@@ -8528,6 +8531,9 @@ packages:
 
   pkg-types@2.1.0:
     resolution: {integrity: sha512-wmJwA+8ihJixSoHKxZJRBQG1oY8Yr9pGLzRmSsNms0iNWyHHAlZCa7mmKiFR10YPZuz/2k169JiS/inOjBCZ2A==}
+
+  pkg-types@2.2.0:
+    resolution: {integrity: sha512-2SM/GZGAEkPp3KWORxQZns4M+WSeXbC2HEvmOIJe3Cmiv6ieAJvdVhDldtHqM5J1Y7MrR1XhkBT/rMlhh9FdqQ==}
 
   playwright-core@1.52.0:
     resolution: {integrity: sha512-l2osTgLXSMeuLZOML9qYODUQoPPnUsKsb5/P6LJ2e6uPKXUdPK5WYhN4z03G+YNbWmGDY4YENauNu4ZKczreHg==}
@@ -16485,6 +16491,8 @@ snapshots:
 
   exsolve@1.0.5: {}
 
+  exsolve@1.0.7: {}
+
   extend-shallow@2.0.1:
     dependencies:
       is-extendable: 0.1.1
@@ -18596,6 +18604,12 @@ snapshots:
     dependencies:
       confbox: 0.2.2
       exsolve: 1.0.5
+      pathe: 2.0.3
+
+  pkg-types@2.2.0:
+    dependencies:
+      confbox: 0.2.2
+      exsolve: 1.0.7
       pathe: 2.0.3
 
   playwright-core@1.52.0: {}
