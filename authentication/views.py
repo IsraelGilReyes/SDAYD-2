@@ -110,8 +110,8 @@ def register(request):
                 'access_token',
                 access_token,
                 httponly=True,
-                secure=True,
-                samesite='Strict',
+                secure=False,  # False para desarrollo local
+                samesite='Lax',  # Lax para desarrollo local
                 max_age=3600  # 1 hora access token
             )
             
@@ -119,8 +119,8 @@ def register(request):
                 'refresh_token',
                 refresh_token,
                 httponly=True,
-                secure=True,
-                samesite='Strict',
+                secure=False,  # False para desarrollo local
+                samesite='Lax',  # Lax para desarrollo local
                 max_age=24 * 3600  # 24 horas refresh token
             )
             
@@ -129,13 +129,13 @@ def register(request):
         except Exception as e:
             return Response({
                 'status': 'error',
-                'message': 'Error al registrar el usuario',
+                'message': 'Error interno del servidor',
                 'detail': str(e)
-            }, status=status.HTTP_400_BAD_REQUEST)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     return Response({
         'status': 'error',
-        'message': 'Error en el registro',
+        'message': 'Datos inválidos',
         'errors': serializer.errors
     }, status=status.HTTP_400_BAD_REQUEST)
 
@@ -282,3 +282,4 @@ def create_user(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+

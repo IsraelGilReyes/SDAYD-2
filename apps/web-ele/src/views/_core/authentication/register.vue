@@ -3,13 +3,18 @@ import type { VbenFormSchema } from '@vben/common-ui';
 import type { Recordable } from '@vben/types';
 
 import { computed, h, ref } from 'vue';
+import { ElNotification } from 'element-plus';
 
 import { AuthenticationRegister, z } from '@vben/common-ui';
 import { $t } from '@vben/locales';
+//import { ca } from 'element-plus/es/locales.mjs';
+import { useAuthStore } from '#/store';
+import { router } from '#/router';
 
 defineOptions({ name: 'Register' });
 
 const loading = ref(false);
+const authStore = useAuthStore();
 
 const formSchema = computed((): VbenFormSchema[] => {
   return [
@@ -21,6 +26,17 @@ const formSchema = computed((): VbenFormSchema[] => {
       fieldName: 'username',
       label: $t('authentication.username'),
       rules: z.string().min(1, { message: $t('authentication.usernameTip') }),
+    },
+    {
+      component: 'VbenInput',
+      componentProps: {
+        placeholder: $t('authentication.emailTip'),
+      },
+      fieldName: 'email',
+      label: $t('authentication.email'),
+      rules: z.string()
+        .min(1, { message: $t('authentication.emailRequired') })
+        .email({ message: $t('authentication.emailInvalid') }),
     },
     {
       component: 'VbenInputPassword',
@@ -81,10 +97,59 @@ const formSchema = computed((): VbenFormSchema[] => {
   ];
 });
 
-function handleSubmit(value: Recordable<any>) {
-  // eslint-disable-next-line no-console
-  console.log('register submit:', value);
+async function handleSubmit(value: Recordable<any>) {
+  try {
+    loading.value = true;
+    const result = await authStore.registerUser({
+      username: value.username,
+      email: value.email,
+      password: value.password,
+      password2: value.confirmPassword,
+    });
+
+    //console.log('Register result:', result); // Debug
+
+    if (result.success) {
+      ElNotification({
+        title: $t('Register Success'),
+        message: result.message,
+        type: 'success',
+        duration: 5000,
+      });
+      router.push({ name: 'Login' });
+    } else {
+      // Construye el mensaje de error combinado
+      let errorMessage = result.message;
+      
+      // Si hay errores específicos, sobrescribe el mensaje
+      if (Object.keys(result.errors).length > 0) {
+        errorMessage = Object.values(result.errors)
+          .flat()
+          .join('\n');
+      }
+
+      ElNotification({
+        title: $t('authentication.registerError'),
+        message: errorMessage,
+        type: 'error',
+        duration: 5000,
+        position: 'top-right',
+      });
+    }
+  } catch (error) {
+    console.error('Unexpected error:', error);
+    ElNotification({
+      title: 'Error',
+      message: 'Ocurrió un error inesperado. Por favor intenta nuevamente.',
+      type: 'error',
+      duration: 5000,
+      position: 'top-right',
+    });
+  } finally {
+    loading.value = false;
+  }
 }
+
 </script>
 
 <template>

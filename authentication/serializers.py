@@ -242,16 +242,20 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("Este correo electrónico ya está registrado.")
+            raise serializers.ValidationError("This email is already registered.")
         return value
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password2']:
-            raise serializers.ValidationError("Las contraseñas no coinciden.")
+            raise serializers.ValidationError({
+                'password2': ['Las contraseñas no coinciden.']
+            })
         try:
             validate_password(attrs['password'])
         except ValidationError as e:
-            raise serializers.ValidationError(list(e.messages))
+            raise serializers.ValidationError({
+                'password': list(e.messages)
+            })
         return attrs
 
     def create(self, validated_data):

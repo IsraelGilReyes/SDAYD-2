@@ -13,8 +13,9 @@ import { resetAllStores, useAccessStore, useUserStore } from '@vben/stores';
 import { ElNotification } from 'element-plus';
 import { defineStore } from 'pinia';
 
-import { getUserInfoApi, loginApi, logoutApi } from '#/api';
+import { getUserInfoApi, loginApi, logoutApi, registerUserApi } from '#/api';
 import { $t } from '#/locales';
+//import { ca } from 'element-plus/es/locales.mjs';
 //import { to } from '@vben/utils';
 
 
@@ -161,7 +162,7 @@ export const useAuthStore = defineStore('auth', () => {
 }
 
 
-  async function fetchUserInfo() {
+async function fetchUserInfo() {
     let userInfo: null | UserInfo = null;
     try {
       userInfo = await getUserInfoApi();
@@ -174,11 +175,37 @@ export const useAuthStore = defineStore('auth', () => {
       });
     }
     return userInfo;
-  }
+}
 
-  function $reset() {
-    loginLoading.value = false;
+async function registerUser(userData: Recordable<any>) {
+  try {
+    const response = await registerUserApi(userData);
+    
+    return {
+      status: response.status,
+      success: true,
+      data: response.data,
+      message: response.data?.message || 'Successfully registered user'
+    };
+
+  } catch (error: any) {
+    console.error('Error details:', error); // Debug detallado
+    
+    // Extrae los datos de error correctamente
+    const errorData = error.response?.data || error;
+    
+    return {
+      success: false,
+      status: error.response?.status || 500,
+      message: errorData.message || 'Error al registrar el usuario',
+      errors: errorData.errors || {}  // Asegúrate de capturar los errores aquí
+    };
   }
+}
+
+function $reset() {
+    loginLoading.value = false;
+}
 
   return {
     $reset,
@@ -186,5 +213,6 @@ export const useAuthStore = defineStore('auth', () => {
     fetchUserInfo,
     loginLoading,
     logout,
+    registerUser,
   };
 });

@@ -2,6 +2,7 @@
 // Importa dos clientes de solicitud HTTP desde el módulo de peticiones de la aplicación
 import { baseRequestClient, requestClient } from '#/api/request';
 
+import type { Recordable } from '@vben/types';
 
 // Define un espacio de nombres (namespace) llamado AuthApi que contiene interfaces relacionadas con la autenticación
 export namespace AuthApi {
@@ -67,6 +68,10 @@ export async function getUserInfoApi() {
   return baseRequestClient.get('/auth/info/', {
     withCredentials: true,
   });
+}
+
+export async function registerUserApi(userData: Recordable<any>) {
+  return baseRequestClient.post('/auth/register/', userData);
 }
 
 

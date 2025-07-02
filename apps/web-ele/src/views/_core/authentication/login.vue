@@ -6,7 +6,7 @@ import { computed, markRaw } from 'vue';
 
 import { AuthenticationLogin, SliderCaptcha, z } from '@vben/common-ui';
 import { $t } from '@vben/locales';
-
+import type { Recordable } from '@vben/types';
 import { useAuthStore } from '#/store';
 
 defineOptions({ name: 'Login' });
