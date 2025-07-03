@@ -16,6 +16,8 @@
   html {
     @apply text-foreground bg-background font-sans text-[100%];
 
+    font-family: Verdana, Geneva, Tahoma, sans-serif !important;
+    font-size: 15px !important;
     font-variation-settings: normal;
     line-height: 1.15;
     text-size-adjust: 100%;
@@ -38,6 +40,7 @@
 
   body {
     min-height: 100vh;
+    font-family: Verdana, Geneva, Tahoma, sans-serif !important;
 
     /* pointer-events: auto !important; */
 

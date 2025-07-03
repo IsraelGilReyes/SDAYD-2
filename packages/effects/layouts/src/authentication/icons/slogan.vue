@@ -1,7 +1,7 @@
 <template>
   <div class="police-station-banner-static">
     <div class="police-bg"></div>
-    <img src="/police-station.jpeg" alt="Estación de policía" draggable="false" />
+    <!-- <img src="/police-station.jpeg" alt="Estación de policía" draggable="false" /> -->
   </div>
 </template>
 

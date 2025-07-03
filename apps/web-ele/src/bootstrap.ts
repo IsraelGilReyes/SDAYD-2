@@ -9,6 +9,8 @@ import '@vben/styles/ele';
 
 import { useTitle } from '@vueuse/core';
 import { ElLoading } from 'element-plus';
+import ElementPlus from 'element-plus';
+import 'element-plus/dist/index.css';
 
 import { $t, setupI18n } from '#/locales';
 
@@ -72,6 +74,8 @@ async function bootstrap(namespace: string) {
       useTitle(pageTitle);
     }
   });
+
+  app.use(ElementPlus);
 
   app.mount('#app');
 }

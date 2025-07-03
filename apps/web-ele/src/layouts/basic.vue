@@ -27,28 +27,28 @@ const mostrarModalEditarPerfil = ref(false);
 
 const notifications = ref<NotificationItem[]>([
   {
-    avatar: '/police-station.jpeg',
+    avatar: '',
     date: '3小时前',
     isRead: true,
     message: '描述信息描述信息描述信息',
     title: '收到了 14 份新周报',
   },
   {
-    avatar: '/police-station.jpeg',
+    avatar: '',
     date: '刚刚',
     isRead: false,
     message: '描述信息描述信息描述信息',
     title: '朱偏右 回复了你',
   },
   {
-    avatar: '/police-station.jpeg',
+    avatar: '',
     date: '2024-01-01',
     isRead: false,
     message: '描述信息描述信息描述信息',
     title: '曲丽丽 评论了你',
   },
   {
-    avatar: '/police-station.jpeg',
+    avatar: '',
     date: '1天前',
     isRead: false,
     message: '描述信息描述信息描述信息',
@@ -170,7 +170,7 @@ watch(
       >
         <div class="bg-white p-6 rounded-lg shadow-lg w-[90%] max-w-md text-center border border-blue-100">
           <img
-            :src="userStore.userInfo?.avatar ?? '/police-station.jpeg'"
+            :src="userStore.userInfo?.avatar ?? ''"
             alt="Estación de policía"
             class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-green-600"
           />
