@@ -1,23 +1,23 @@
 /**
- * @zh_CN 登录页面 url 地址
+ * @es_ES URL de la página de inicio de sesión
  */
 export const LOGIN_PATH = '/auth/login';
 
 export interface LanguageOption {
   label: string;
-  value: 'en-US' | 'zh-CN';
+  value: 'en-US' | 'es-ES';
 }
 
 /**
- * Supported languages
+ * Idiomas soportados
  */
 export const SUPPORT_LANGUAGES: LanguageOption[] = [
   {
-    label: '简体中文',
-    value: 'zh-CN',
-  },
-  {
     label: 'English',
     value: 'en-US',
+  },
+  {
+    label: 'Español',
+    value: 'es-ES',
   },
 ];

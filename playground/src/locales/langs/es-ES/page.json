@@ -1,0 +1,16 @@
+{
+  "auth": {
+    "login": "Iniciar Sesión",
+    "register": "Registrarse",
+    "codeLogin": "Iniciar con Código",
+    "qrcodeLogin": "Iniciar con QR",
+    "forgetPassword": "Olvidé mi Contraseña",
+    "sendingCode": "Enviando código SMS...",
+    "codeSentTo": "El código ha sido enviado a {0}"
+  },
+  "dashboard": {
+    "title": "Panel de Control",
+    "analytics": "Análisis",
+    "workspace": "Área de Trabajo"
+  }
+}

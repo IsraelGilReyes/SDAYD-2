@@ -15,9 +15,9 @@ import { preferences } from '@vben/preferences';
 
 import dayjs from 'dayjs';
 import enLocale from 'element-plus/es/locale/lang/en';
-import defaultLocale from 'element-plus/es/locale/lang/zh-cn';
+import esLocale from 'element-plus/es/locale/lang/es';
 
-const elementLocale = ref<Language>(defaultLocale);
+const elementLocale = ref<Language>(enLocale);
 
 const modules = import.meta.glob('./langs/**/*.json');
 
@@ -26,8 +26,8 @@ const localesMap = loadLocalesMapFromDir(
   modules,
 );
 /**
- * 加载应用特有的语言包
- * 这里也可以改造为从服务端获取翻译数据
+ * Cargar archivos de idioma específicos de la aplicación
+ * Esto también se puede modificar para obtener datos de traducción del servidor
  * @param lang
  */
 async function loadMessages(lang: SupportedLanguagesType) {
@@ -35,11 +35,11 @@ async function loadMessages(lang: SupportedLanguagesType) {
     localesMap[lang]?.(),
     loadThirdPartyMessage(lang),
   ]);
-  return appLocaleMessages?.default;
+  return appLocaleMessages?.default || {};
 }
 
 /**
- * 加载第三方组件库的语言包
+ * Cargar bibliotecas de componentes de terceros
  * @param lang
  */
 async function loadThirdPartyMessage(lang: SupportedLanguagesType) {
@@ -47,7 +47,7 @@ async function loadThirdPartyMessage(lang: SupportedLanguagesType) {
 }
 
 /**
- * 加载dayjs的语言包
+ * Cargar dayjs locale
  * @param lang
  */
 async function loadDayjsLocale(lang: SupportedLanguagesType) {
@@ -57,11 +57,11 @@ async function loadDayjsLocale(lang: SupportedLanguagesType) {
       locale = await import('dayjs/locale/en');
       break;
     }
-    case 'zh-CN': {
-      locale = await import('dayjs/locale/zh-cn');
+    case 'es-ES': {
+      locale = await import('dayjs/locale/es');
       break;
     }
-    // 默认使用英语
+    // Por defecto usar inglés
     default: {
       locale = await import('dayjs/locale/en');
     }
@@ -74,7 +74,7 @@ async function loadDayjsLocale(lang: SupportedLanguagesType) {
 }
 
 /**
- * 加载element-plus的语言包
+ * Cargar element-plus locale
  * @param lang
  */
 async function loadElementLocale(lang: SupportedLanguagesType) {
@@ -83,8 +83,8 @@ async function loadElementLocale(lang: SupportedLanguagesType) {
       elementLocale.value = enLocale;
       break;
     }
-    case 'zh-CN': {
-      elementLocale.value = defaultLocale;
+    case 'es-ES': {
+      elementLocale.value = esLocale;
       break;
     }
   }

@@ -1,0 +1,104 @@
+{
+  "formRules": {
+    "required": "Por favor ingresa {0}",
+    "selectRequired": "Por favor selecciona {0}",
+    "minLength": "{0} debe tener al menos {1} caracteres",
+    "maxLength": "{0} puede tener como máximo {1} caracteres",
+    "length": "{0} debe tener {1} caracteres de longitud",
+    "alreadyExists": "{0} `{1}` ya existe",
+    "startWith": "{0} debe comenzar con `{1}`",
+    "invalidURL": "Por favor ingresa una URL válida"
+  },
+  "actionTitle": {
+    "edit": "Modificar {0}",
+    "create": "Crear {0}",
+    "delete": "Eliminar {0}",
+    "view": "Ver {0}"
+  },
+  "actionMessage": {
+    "deleteConfirm": "¿Estás seguro de eliminar {0}?",
+    "deleting": "Eliminando {0} ...",
+    "deleteSuccess": "{0} eliminado exitosamente",
+    "operationSuccess": "Operación exitosa",
+    "operationFailed": "Operación fallida"
+  },
+  "placeholder": {
+    "input": "Por favor ingresa",
+    "select": "Por favor selecciona"
+  },
+  "captcha": {
+    "title": "Por favor completa la verificación de seguridad",
+    "sliderSuccessText": "Aprobado",
+    "sliderDefaultText": "Deslizar y arrastrar",
+    "alt": "Soporta valor del atributo src de la etiqueta img",
+    "sliderRotateDefaultTip": "Haz clic en la imagen para actualizar",
+    "sliderRotateFailTip": "Validación fallida",
+    "sliderRotateSuccessTip": "Validación exitosa, tiempo {0} segundos",
+    "refreshAriaLabel": "Actualizar captcha",
+    "confirmAriaLabel": "Confirmar selección",
+    "confirm": "Confirmar",
+    "pointAriaLabel": "Hacer clic en el punto",
+    "clickInOrder": "Por favor haz clic en orden"
+  },
+  "iconPicker": {
+    "placeholder": "Selecciona un icono",
+    "search": "Buscar icono..."
+  },
+  "jsonViewer": {
+    "copy": "Copiar",
+    "copied": "Copiado"
+  },
+  "fallback": {
+    "pageNotFound": "¡Ups! Página No Encontrada",
+    "pageNotFoundDesc": "Lo sentimos, no pudimos encontrar la página que buscabas.",
+    "forbidden": "¡Ups! Acceso Denegado",
+    "forbiddenDesc": "Lo sentimos, pero no tienes permiso para acceder a esta página.",
+    "internalError": "¡Ups! Algo Salió Mal",
+    "internalErrorDesc": "Lo sentimos, pero el servidor encontró un error.",
+    "offline": "Página Sin Conexión",
+    "offlineError": "¡Ups! Error de Red",
+    "offlineErrorDesc": "Lo sentimos, no se puede conectar a internet. Verifica tu conexión.",
+    "comingSoon": "Próximamente",
+    "http": {
+      "requestTimeout": "La solicitud expiró. Por favor intenta de nuevo más tarde.",
+      "networkError": "Ocurrió un error de red. Por favor verifica tu conexión a internet e intenta de nuevo.",
+      "badRequest": "Solicitud Incorrecta. Por favor verifica tu entrada e intenta de nuevo.",
+      "unauthorized": "No Autorizado. Por favor inicia sesión para continuar.",
+      "forbidden": "Prohibido. No tienes permiso para acceder a este recurso.",
+      "notFound": "No Encontrado. El recurso solicitado no pudo ser encontrado.",
+      "internalServerError": "Error Interno del Servidor. Algo salió mal de nuestro lado. Por favor intenta de nuevo más tarde."
+    }
+  },
+  "widgets": {
+    "document": "Documento",
+    "qa": "Preguntas y Respuestas",
+    "setting": "Configuraciones",
+    "logoutTip": "¿Quieres cerrar sesión?",
+    "viewAll": "Ver Todos los Mensajes",
+    "notifications": "Notificaciones",
+    "markAllAsRead": "Marcar Todo como Leído",
+    "clearNotifications": "Limpiar",
+    "checkUpdatesTitle": "Nueva Versión Disponible",
+    "checkUpdatesDescription": "Haz clic para actualizar y obtener la última versión",
+    "search": {
+      "title": "Buscar",
+      "searchNavigate": "Buscar Navegación",
+      "select": "Seleccionar",
+      "navigate": "Navegar",
+      "close": "Cerrar",
+      "noResults": "No se Encontraron Resultados de Búsqueda",
+      "noRecent": "Sin Historial de Búsqueda",
+      "recent": "Historial de Búsqueda"
+    },
+    "lockScreen": {
+      "title": "Bloquear Pantalla",
+      "screenButton": "Bloqueando",
+      "password": "Contraseña",
+      "placeholder": "Por favor ingresa la contraseña",
+      "unlock": "Haz clic para desbloquear",
+      "errorPasswordTip": "Error de contraseña, por favor vuelve a ingresar",
+      "backToLogin": "Volver al inicio de sesión",
+      "entry": "Ingresar al sistema"
+    }
+  }
+}
