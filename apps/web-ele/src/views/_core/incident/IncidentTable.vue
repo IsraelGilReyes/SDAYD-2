@@ -11,7 +11,7 @@
     
     <el-table
       v-if="incidents.length"
-      :data="incidents"
+      :data="showAllIncidents ? incidents : incidents.slice(-20)"
       stripe
       border
       class="incident-table custom-bg-table"
@@ -21,12 +21,13 @@
       <el-table-column prop="date" label="Fecha" width="120" />
       <el-table-column prop="time" label="Hora" width="100" />
       <el-table-column prop="lugar" label="Lugar" width="160" />
-      <el-table-column prop="name" label="Nombre" width="180" />
-      <el-table-column prop="phone" label="Teléfono" width="140" />
-      <el-table-column prop="street" label="Calle y Colonia" width="200" />
-      <el-table-column prop="description" label="Descripción" />
-      <el-table-column prop="officerObservations" label="Observaciones del oficial" />
-      <el-table-column prop="officerConclusions" label="Conclusiones del oficial" />
+      <el-table-column prop="name" label="Nombre" width="150" />
+      <el-table-column prop="phone" label="Teléfono" width="120" />
+      <el-table-column prop="personType" label="Tipo de Persona" width="120" />
+      <el-table-column prop="exactAddress" label="Dirección Exacta" width="180" />
+      <el-table-column prop="description" label="Descripción" width="200" />
+      <el-table-column prop="officerObservations" label="Observaciones" width="150" />
+      <el-table-column prop="officerConclusions" label="Conclusiones" width="150" />
       <el-table-column label="Acciones" width="160">
         <template #default="scope">
           <div class="action-buttons">
@@ -40,6 +41,23 @@
         </template>
       </el-table-column>
     </el-table>
+    
+    <!-- Botón Ver más incidentes -->
+    <div v-if="incidents.length > 20" class="show-more-incidents-container">
+      <el-button 
+        type="info" 
+        @click="showAllIncidents = !showAllIncidents"
+        class="show-more-incidents-btn"
+      >
+        <span v-if="!showAllIncidents">
+          👇 Ver más incidentes ({{ incidents.length - 20 }} más)
+        </span>
+        <span v-else>
+          👆 Ver menos (últimos 20)
+        </span>
+      </el-button>
+    </div>
+    
     <div v-else class="empty-message">
       <el-empty description="No hay incidentes registrados." />
     </div>
@@ -59,13 +77,20 @@ interface Incident {
   lugar: string;
   name: string;
   phone: string;
-  street: string;
+  personType: string;
+  exactAddress: string;
   description: string;
   officerObservations: string;
   officerConclusions: string;
+  latitude?: string;
+  longitude?: string;
+  referencePoints?: string;
+  escapeRoutes?: string;
+  securityCameras?: string;
 }
 
 const incidents = ref<Incident[]>([]);
+const showAllIncidents = ref(false);
 
 function addIncident(incident: any) {
   incidents.value.push({
@@ -75,10 +100,16 @@ function addIncident(incident: any) {
     lugar: incident.lugar,
     name: incident.name,
     phone: incident.phone,
-    street: incident.street,
+    personType: incident.personType,
+    exactAddress: incident.exactAddress,
     description: incident.description,
     officerObservations: incident.officerObservations,
     officerConclusions: incident.officerConclusions,
+    latitude: incident.latitude,
+    longitude: incident.longitude,
+    referencePoints: incident.referencePoints,
+    escapeRoutes: incident.escapeRoutes,
+    securityCameras: incident.securityCameras,
   });
 }
 
@@ -215,5 +246,31 @@ function deleteIncident(index: number) {
 .el-divider {
   border-color: #0A97B0 !important;
   background: #0A97B0 !important;
+}
+
+/* Estilos para botón Ver más incidentes */
+.show-more-incidents-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  padding: 16px;
+}
+
+.show-more-incidents-btn {
+  border-radius: 12px;
+  font-weight: 600;
+  padding: 12px 24px;
+  font-size: 1rem;
+  background: linear-gradient(90deg, #6366f1 0%, #60a5fa 100%);
+  border: none;
+  color: white;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  transition: all 0.3s ease;
+}
+
+.show-more-incidents-btn:hover {
+  background: linear-gradient(90deg, #60a5fa 0%, #6366f1 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
 }
 </style> 
