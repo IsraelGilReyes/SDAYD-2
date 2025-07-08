@@ -15,6 +15,7 @@ import { defineStore } from 'pinia';
 
 import { getUserInfoApi, loginApi, logoutApi, registerUserApi } from '#/api';
 import { $t } from '#/locales';
+import { persistencePlugin } from '#/stores/plugins/persistence';
 //import { ca } from 'element-plus/es/locales.mjs';
 //import { to } from '@vben/utils';
 
@@ -45,7 +46,9 @@ export const useAuthStore = defineStore('auth', () => {
     const response = await loginApi(params);
 
     if (response && response.status === 'success') {
-      // ✅ No guardamos access token, porque ya está en cookie HttpOnly
+      // ✅ Establecer token ficticio para indicar que está autenticado
+      // El token real está en la cookie HttpOnly, pero necesitamos esto para el router guard
+      accessStore.setAccessToken('authenticated-via-cookie');
 
       // Guardar la información del usuario
       userInfo = {
@@ -54,17 +57,21 @@ export const useAuthStore = defineStore('auth', () => {
         email: response.user.email,
         avatar: '',
         userId: response.user.id.toString(),
-        roles: [],
+        roles: (response.user as any).roles || ['usuario'], // ✅ Roles del backend
         desc: '',
-        homePath: '/dashboard',
-        // ❌ Ya no se guarda el token
-        token: '',
+        homePath: '/dashboard/incidents', // ✅ Redirigir directamente a incidentes
+        // ✅ Token ficticio para el router guard (el real está en cookie)
+        token: 'authenticated-via-cookie',
       };
 
       userStore.setUserInfo(userInfo);
 
-      // Redirigir al dashboard
-      await router.push('/dashboard');
+      // 🔥 Persistir datos del usuario
+      persistencePlugin.saveUserInfo(userInfo);
+      persistencePlugin.saveUserRoles(userInfo.roles || []);
+
+      // Redirigir al dashboard de incidentes
+      await router.push('/dashboard/incidents');
 
       ElNotification({
         message: response.message || $t('authentication.loginSuccessDesc'),
@@ -149,6 +156,9 @@ export const useAuthStore = defineStore('auth', () => {
   } finally {
     resetAllStores();
     accessStore.setLoginExpired(false);
+    
+    // 🔥 Limpiar datos persistidos al hacer logout
+    persistencePlugin.clear();
 
     await router.replace({
       path: LOGIN_PATH,
@@ -165,14 +175,52 @@ export const useAuthStore = defineStore('auth', () => {
 async function fetchUserInfo() {
     let userInfo: null | UserInfo = null;
     try {
-      userInfo = await getUserInfoApi();
+      console.log('🔍 Iniciando fetchUserInfo...');
+      const response = await getUserInfoApi();
+      console.log('📝 Respuesta getUserInfoApi:', response);
+      
+      // Extraer los datos del usuario desde la respuesta
+      const userData = response.user || response;
+      console.log('👤 Datos del usuario:', userData);
+      
+      userInfo = {
+        username: userData.username || 'Test User',
+        realName: userData.username || 'Test User',
+        email: userData.email || 'test@example.com',
+        avatar: '',
+        userId: userData.id?.toString() || '1',
+        roles: userData.roles || ['usuario'], // ✅ Roles del backend
+        desc: '',
+        homePath: '/dashboard/incidents', // ✅ Redirigir directamente a incidentes
+        token: 'authenticated-via-cookie',
+      };
+      
+      console.log('✅ userInfo creado:', userInfo);
       userStore.setUserInfo(userInfo);
+      
+      // 🔥 Persistir datos del usuario tras fetchUserInfo
+      persistencePlugin.saveUserInfo(userInfo);
+      persistencePlugin.saveUserRoles(userInfo.roles || []);
     } catch (error) {
-      console.error('Error fetching user info:', error);
+      console.error('❌ Error fetching user info:', error);
       ElNotification({
         message: $t('authentication.fetchUserInfoError'),
         type: 'error',
       });
+      
+      // En caso de error, crear un usuario temporal para evitar bucles infinitos
+      userInfo = {
+        username: 'Usuario Temporal',
+        realName: 'Usuario Temporal',
+        email: 'temp@example.com',
+        avatar: '',
+        userId: '1',
+        roles: ['usuario'],
+        desc: '',
+        homePath: '/dashboard/incidents', // ✅ Redirigir directamente a incidentes
+        token: 'authenticated-via-cookie',
+      };
+      userStore.setUserInfo(userInfo);
     }
     return userInfo;
 }

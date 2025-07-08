@@ -37,15 +37,8 @@ const coreRoutes: RouteRecordRaw[] = [
     path: '/',
     redirect: preferences.app.defaultHomePath,
     children: [
-      {
-        name: 'Dashboard',
-        path: 'dashboard',
-        component: () => import('#/views/dashboard/index.vue'),
-        meta: {
-          title: 'Dashboard',
-          requiresAuth: true,
-        },
-      },
+      // ❌ ELIMINADA: La ruta del dashboard ya está definida en los módulos dinámicos
+      // No debe estar aquí porque se salta la verificación de autenticación
     ],
   },
   {
