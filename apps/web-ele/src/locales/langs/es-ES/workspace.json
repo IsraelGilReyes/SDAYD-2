@@ -1,0 +1,47 @@
+{
+  "workspace": {
+    "greeting": "Buenos días, {0}, ¡comienza tu día de trabajo!",
+    "weather": "¡Hoy soleado, 20℃ - 32℃!",
+    "projects": "Proyectos",
+    "quickNav": "Navegación Rápida",
+    "todo": "Tareas Pendientes",
+    "latestTrends": "Últimas Tendencias",
+    "visitSource": "Fuente de Visitas",
+    "groups": {
+      "opensource": "Grupo de Código Abierto",
+      "algorithm": "Grupo de Algoritmos",
+      "workSlacking": "Holgazaneando en el Trabajo",
+      "ui": "UI",
+      "techGuru": "Gurú Técnico",
+      "architecture": "Grupo de Arquitectura"
+    },
+    "navigation": {
+      "home": "Inicio",
+      "dashboard": "Panel de Control",
+      "components": "Componentes", 
+      "systemManagement": "Gestión del Sistema",
+      "permissionManagement": "Gestión de Permisos",
+      "charts": "Gráficos"
+    },
+    "projectMottos": {
+      "opportunity": "No esperes oportunidades, créalas.",
+      "future": "El tú presente determina el tú futuro.",
+      "effort": "Nada es más importante que el esfuerzo.",
+      "passion": "La pasión y el deseo pueden superar todas las dificultades.",
+      "health": "Un cuerpo saludable es la base para lograr objetivos.",
+      "action": "El camino se recorre caminando, no imaginándolo."
+    },
+    "todoItems": {
+      "codeReview": "Revisar Commits de Código Frontend",
+      "codeReviewDesc": "Revisar el código frontend recientemente enviado al repositorio Git, asegurar calidad y estándares del código.",
+      "performanceOpt": "Optimización de Rendimiento del Sistema",
+      "performanceOptDesc": "Verificar y optimizar el rendimiento del sistema, reducir el uso de CPU.",
+      "securityCheck": "Verificación de Seguridad",
+      "securityCheckDesc": "Realizar verificación de seguridad del sistema, asegurar que no haya vulnerabilidades de seguridad o acceso no autorizado.",
+      "updateDeps": "Actualizar Dependencias del Proyecto",
+      "updateDepsDesc": "Actualizar todos los paquetes de dependencias npm en el proyecto, asegurar el uso de las últimas versiones.",
+      "fixUIIssues": "Corregir Problemas de Visualización de UI",
+      "fixUIIssuesDesc": "Corregir problemas de visualización de UI de página reportados por usuarios, asegurar visualización consistente en diferentes navegadores."
+    }
+  }
+}

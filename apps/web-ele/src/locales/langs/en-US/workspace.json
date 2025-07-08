@@ -1,0 +1,47 @@
+{
+  "workspace": {
+    "greeting": "Good morning, {0}, start your day's work!",
+    "weather": "Sunny today, 20℃ - 32℃!",
+    "projects": "Projects",
+    "quickNav": "Quick Navigation",
+    "todo": "Todo Items",
+    "latestTrends": "Latest Trends",
+    "visitSource": "Visit Source",
+    "groups": {
+      "opensource": "Open Source Group",
+      "algorithm": "Algorithm Group", 
+      "workSlacking": "Work Slacking",
+      "ui": "UI",
+      "techGuru": "Tech Guru",
+      "architecture": "Architecture Group"
+    },
+    "navigation": {
+      "home": "Home",
+      "dashboard": "Dashboard", 
+      "components": "Components",
+      "systemManagement": "System Management",
+      "permissionManagement": "Permission Management",
+      "charts": "Charts"
+    },
+    "projectMottos": {
+      "opportunity": "Don't wait for opportunities, create them.",
+      "future": "Present you determines future you.",
+      "effort": "Nothing is more important than effort.",
+      "passion": "Passion and desire can break through all difficulties.",
+      "health": "A healthy body is the cornerstone of achieving goals.",
+      "action": "The road is walked out, not imagined."
+    },
+    "todoItems": {
+      "codeReview": "Review Frontend Code Commits",
+      "codeReviewDesc": "Review the frontend code recently submitted to Git repository, ensure code quality and standards.",
+      "performanceOpt": "System Performance Optimization", 
+      "performanceOptDesc": "Check and optimize system performance, reduce CPU usage.",
+      "securityCheck": "Security Check",
+      "securityCheckDesc": "Conduct system security check, ensure no security vulnerabilities or unauthorized access.",
+      "updateDeps": "Update Project Dependencies",
+      "updateDepsDesc": "Update all npm dependency packages in the project, ensure using the latest versions.",
+      "fixUIIssues": "Fix UI Display Issues",
+      "fixUIIssuesDesc": "Fix page UI display issues reported by users, ensure consistent display across different browsers."
+    }
+  }
+}

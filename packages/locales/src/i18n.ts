@@ -100,7 +100,7 @@ function setI18nLanguage(locale: Locale) {
 }
 
 async function setupI18n(app: App, options: LocaleSetupOptions = {}) {
-  const { defaultLocale = 'zh-CN' } = options;
+  const { defaultLocale = 'en-US' } = options;
   // app可以自行扩展一些第三方库和组件库的国际化
   loadMessages = options.loadMessages || (async () => ({}));
   app.use(i18n);
@@ -124,7 +124,7 @@ async function loadLocaleMessages(lang: SupportedLanguagesType) {
   if (unref(i18n.global.locale) === lang) {
     return setI18nLanguage(lang);
   }
-  setSimpleLocale(lang);
+  setSimpleLocale(lang as any);
 
   const message = await localesMap[lang]?.();
 
@@ -133,7 +133,9 @@ async function loadLocaleMessages(lang: SupportedLanguagesType) {
   }
 
   const mergeMessage = await loadMessages(lang);
-  i18n.global.mergeLocaleMessage(lang, mergeMessage);
+  if (mergeMessage && typeof mergeMessage === 'object') {
+    i18n.global.mergeLocaleMessage(lang, mergeMessage);
+  }
 
   return setI18nLanguage(lang);
 }

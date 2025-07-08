@@ -11,6 +11,21 @@ import { useAuthStore } from '#/store';
 import { generateAccess } from './access';
 
 /**
+ * Verifica si hay una sesión activa mediante cookies
+ */
+function hasActiveSession(): boolean {
+  // Verifica si existe la cookie de access_token de nuestro sistema
+  const sessionCookie = document.cookie
+    .split(';')
+    .find(cookie => cookie.trim().startsWith('access_token='));
+  
+  console.log('🔍 Verificando cookies de sesión:', document.cookie);
+  console.log('🔍 Cookie encontrada:', sessionCookie);
+  
+  return !!sessionCookie;
+}
+
+/**
  * 通用守卫配置
  * @param router
  */
@@ -52,7 +67,7 @@ function setupAccessGuard(router: Router) {
 
     // 基本路由，这些路由不需要进入权限拦截
     if (coreRouteNames.includes(to.name as string)) {
-      if (to.path === LOGIN_PATH && accessStore.accessToken) {
+      if (to.path === LOGIN_PATH && (accessStore.accessToken || hasActiveSession())) {
         return decodeURIComponent(
           (to.query?.redirect as string) ||
             userStore.userInfo?.homePath ||
@@ -62,27 +77,70 @@ function setupAccessGuard(router: Router) {
       return true;
     }
 
-    // accessToken 检查
-    if (!accessStore.accessToken) {
-      // 明确声明忽略权限访问权限，则可以访问
+    // 🔒 Verificación de autenticación PRIMERO
+    const hasValidCookies = hasActiveSession();
+    const hasTokenInStore = !!accessStore.accessToken;
+    const hasUserInfo = !!userStore.userInfo;
+    
+    console.log('🔍 Estado de autenticación:', {
+      hasValidCookies,
+      hasTokenInStore,
+      hasUserInfo,
+      currentPath: to.fullPath
+    });
+
+    // Si NO hay cookies válidas Y NO hay token en store, redirigir al login
+    if (!hasValidCookies && !hasTokenInStore) {
+      // Permitir rutas que ignoran autenticación (como login, register)
       if (to.meta.ignoreAccess) {
         return true;
       }
 
-      // 没有访问权限，跳转登录页面
+      console.log('❌ No hay autenticación válida, redirigiendo al login');
       if (to.fullPath !== LOGIN_PATH) {
         return {
           path: LOGIN_PATH,
-          // 如不需要，直接删除 query
-          query:
-            to.fullPath === preferences.app.defaultHomePath
-              ? {}
-              : { redirect: encodeURIComponent(to.fullPath) },
-          // 携带当前跳转的页面，登录后重新跳转该页面
+          query: to.fullPath === preferences.app.defaultHomePath
+            ? {}
+            : { redirect: encodeURIComponent(to.fullPath) },
           replace: true,
         };
       }
       return to;
+    }
+
+    // Si hay cookies pero no hay información del usuario, obtenerla del servidor
+    if (hasValidCookies && !hasUserInfo) {
+      console.log('🔄 Cookies válidas pero sin info de usuario, obteniendo del servidor...');
+      try {
+        const userInfo = await authStore.fetchUserInfo();
+        if (userInfo) {
+          accessStore.setAccessToken('authenticated-via-cookie');
+        } else {
+          // Si no se puede obtener la información, limpiar cookies y redirigir
+          document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+          document.cookie = 'refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+          return {
+            path: LOGIN_PATH,
+            query: { redirect: encodeURIComponent(to.fullPath) },
+            replace: true,
+          };
+        }
+      } catch (error) {
+        console.error('❌ Error obteniendo info del usuario:', error);
+        // Limpiar cookies corruptas y redirigir al login
+        document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        document.cookie = 'refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        return {
+          path: LOGIN_PATH,
+          query: { redirect: encodeURIComponent(to.fullPath) },
+          replace: true,
+        };
+      }
+    } else if (hasUserInfo && !hasTokenInStore) {
+      // Si hay info del usuario pero no token en store, establecerlo
+      console.log('✅ Restaurando token desde localStorage');
+      accessStore.setAccessToken('authenticated-via-cookie');
     }
 
     // 是否已经生成过动态路由
@@ -90,9 +148,19 @@ function setupAccessGuard(router: Router) {
       return true;
     }
 
-    // 生成路由表
-    // 当前登录用户拥有的角色标识列表
-    const userInfo = userStore.userInfo || (await authStore.fetchUserInfo());
+    // 生成路由表 - En este punto YA TENEMOS información del usuario
+    const userInfo = userStore.userInfo;
+    
+    if (!userInfo) {
+      // Esto no debería pasar, pero por seguridad redirigir al login
+      console.error('❌ No hay información del usuario después de la verificación');
+      return {
+        path: LOGIN_PATH,
+        query: { redirect: encodeURIComponent(to.fullPath) },
+        replace: true,
+      };
+    }
+    
     const userRoles = userInfo.roles ?? [];
 
     // 生成菜单和路由
@@ -109,7 +177,7 @@ function setupAccessGuard(router: Router) {
     accessStore.setIsAccessChecked(true);
     const redirectPath = (from.query.redirect ??
       (to.path === preferences.app.defaultHomePath
-        ? userInfo.homePath || preferences.app.defaultHomePath
+        ? (userInfo?.homePath || preferences.app.defaultHomePath)
         : to.fullPath)) as string;
 
     return {

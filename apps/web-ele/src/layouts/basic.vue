@@ -181,7 +181,14 @@ watch(
             <p><span class="font-semibold text-gray-800">Nombre completo:</span> {{ userStore.userInfo?.realName }}</p>
             <p><span class="font-semibold text-gray-800">Correo electrónico:</span> {{ userStore.userInfo?.email }}</p>
             <p><span class="font-semibold text-gray-800">Número de teléfono:</span> {{ userStore.userInfo?.phone ?? 'No registrado' }}</p>
-            <p><span class="font-semibold text-gray-800">Rol:</span> {{ userStore.userInfo?.role ?? 'Usuario' }}</p>
+            <p><span class="font-semibold text-gray-800">Rol:</span> 
+              <span v-if="userStore.userRoles.includes('administrador')" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                🛡️ Administrador
+              </span>
+              <span v-else class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                👤 Usuario
+              </span>
+            </p>
           </div>
 
           <div class="mt-6 text-right">

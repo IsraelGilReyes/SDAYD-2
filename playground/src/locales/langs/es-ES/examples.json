@@ -1,0 +1,74 @@
+{
+  "title": "Ejemplos",
+  "modal": {
+    "title": "Modal"
+  },
+  "drawer": {
+    "title": "Cajón"
+  },
+  "ellipsis": {
+    "title": "Texto con Elipsis"
+  },
+  "form": {
+    "title": "Formulario",
+    "basic": "Formulario Básico",
+    "layout": "Diseño Personalizado",
+    "query": "Formulario de Consulta",
+    "rules": "Reglas de Formulario",
+    "dynamic": "Formulario Dinámico",
+    "custom": "Componente Personalizado",
+    "api": "Api",
+    "merge": "Combinar Formulario",
+    "upload-error": "Falló la carga parcial de archivos",
+    "upload-urls": "URLs después de la carga de archivos",
+    "file": "archivo",
+    "upload-image": "Haz clic para subir imagen"
+  },
+  "vxeTable": {
+    "title": "Tabla Vxe",
+    "basic": "Tabla Básica",
+    "remote": "Carga Remota",
+    "tree": "Tabla de Árbol",
+    "fixed": "Encabezado/Columna Fija",
+    "virtual": "Desplazamiento Virtual",
+    "editCell": "Editar Celda",
+    "editRow": "Editar Fila",
+    "custom-cell": "Celda Personalizada",
+    "form": "Tabla de Formulario"
+  },
+  "captcha": {
+    "title": "Captcha",
+    "pointSelection": "Captcha de Selección de Puntos",
+    "sliderCaptcha": "Captcha Deslizante",
+    "sliderRotateCaptcha": "Captcha de Rotación",
+    "captchaCardTitle": "Por favor completa la verificación de seguridad",
+    "pageDescription": "Verifica la identidad del usuario haciendo clic en ubicaciones específicas en la imagen.",
+    "pageTitle": "Ejemplo de Componente Captcha",
+    "basic": "Uso Básico",
+    "titlePlaceholder": "Texto del Título del Captcha",
+    "captchaImageUrlPlaceholder": "Imagen del Captcha (soporta valor del atributo src de la etiqueta img)",
+    "hintImage": "Imagen de Pista",
+    "hintText": "Texto de Pista",
+    "hintImagePlaceholder": "Imagen de Pista (soporta valor del atributo src de la etiqueta img)",
+    "hintTextPlaceholder": "Texto de Pista",
+    "showConfirm": "Mostrar Confirmación",
+    "hideConfirm": "Ocultar Confirmación",
+    "widthPlaceholder": "Ancho de Imagen del Captcha Por defecto 300px",
+    "heightPlaceholder": "Alto de Imagen del Captcha Por defecto 220px",
+    "paddingXPlaceholder": "Relleno Horizontal Por defecto 12px",
+    "paddingYPlaceholder": "Relleno Vertical Por defecto 16px",
+    "index": "Índice:",
+    "timestamp": "Marca de Tiempo:",
+    "x": "x:",
+    "y": "y:"
+  },
+  "resize": {
+    "title": "Redimensionar"
+  },
+  "layout": {
+    "col-page": "Diseño ColPage"
+  },
+  "button-group": {
+    "title": "Grupo de Botones"
+  }
+}

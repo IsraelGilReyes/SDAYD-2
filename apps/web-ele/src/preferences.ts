@@ -1,13 +1,14 @@
 import { defineOverridesPreferences } from '@vben/preferences';
 
 /**
- * @description 项目配置文件
- * 只需要覆盖项目中的一部分配置，不需要的配置不用覆盖，会自动使用默认配置
- * !!! 更改配置后请清空缓存，否则可能不生效
+ * @description Archivo de configuración del proyecto
+ * Solo necesita sobrescribir parte de la configuración en el proyecto, no es necesario sobrescribir configuraciones innecesarias, usará automáticamente la configuración predeterminada
+ * !!! Después de cambiar la configuración, por favor limpia la caché, de lo contrario podría no tener efecto
  */
 export const overridesPreferences = defineOverridesPreferences({
-  // overrides
+  // sobrescripciones
   app: {
-    name: import.meta.env.VITE_APP_TITLE ,
+    name: import.meta.env.VITE_APP_TITLE,
+    locale: 'en-US', // Establecer inglés como idioma por defecto
   },
 });

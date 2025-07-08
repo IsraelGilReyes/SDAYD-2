@@ -36,12 +36,22 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         try:
             data = super().validate(attrs)
+            
+            # Obtener roles del usuario
+            user_roles = self.user.user_roles.filter(role__is_active=True)
+            roles = [ur.role.name for ur in user_roles]
+            
+            # Si no tiene roles asignados, asignar rol de usuario por defecto
+            if not roles:
+                roles = ['usuario']
+            
             data.update({
                 'user': {
                     'id': self.user.id,
                     'username': self.user.username,
                     'email': self.user.email,
                     'is_active': self.user.is_active,
+                    'roles': roles  # ✅ Incluir roles en la respuesta
                 }
             })
             return data
@@ -200,10 +210,10 @@ class UserInfoSerializer(serializers.ModelSerializer):
 
     def get_roles(self, obj):
         """
-        Obtiene los roles del usuario serializados.
+        Obtiene los nombres de los roles del usuario.
         """
         user_roles = obj.user_roles.filter(role__is_active=True)
-        return RoleSerializer([ur.role for ur in user_roles], many=True).data
+        return [ur.role.name for ur in user_roles]
 
 
 class ChangePasswordSerializer(serializers.Serializer):
@@ -267,5 +277,28 @@ class RegisterSerializer(serializers.ModelSerializer):
             email=validated_data['email'],
             password=validated_data['password']
         )
+        
+        # 🔥 Asignar automáticamente el rol de "usuario" a los nuevos registros
+        try:
+            from .models import Role, UserRole
+            user_role = Role.objects.get(name='usuario')
+            UserRole.objects.create(
+                user=user,
+                role=user_role,
+                assigned_by=None
+            )
+        except Role.DoesNotExist:
+            # Si no existe el rol, crearlo (aunque esto no debería pasar si setup_roles.py se ejecutó)
+            from .models import Role, UserRole
+            user_role = Role.objects.create(
+                name='usuario',
+                description='Usuario normal del sistema con permisos básicos',
+                is_active=True
+            )
+            UserRole.objects.create(
+                user=user,
+                role=user_role,
+                assigned_by=None
+            )
         
         return user

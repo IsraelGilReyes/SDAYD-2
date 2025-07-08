@@ -13,9 +13,8 @@ import {
 import { LOGIN_PATH } from '@vben/constants';
 
 import { ElMessage } from 'element-plus'; // Para mostrar mensajes de error
-import { useRouter } from 'vue-router'; // Para redirecciones en caso de error (por ejemplo, a login)
 
-import { useAuthStore } from '#/store';
+// import { useAuthStore } from '#/store'; // Temporalmente comentado
 import { $t } from '#/locales'; // Función para traducción (i18n)
 
 
@@ -33,7 +32,7 @@ const API_BASE_URL = 'http://localhost:8000/';
 function createRequestClient(baseURL: string, options?: RequestClientOptions) {
   const client = new RequestClient({
     ...options,
-    baseURL: API_BASE_URL,
+    baseURL: API_BASE_URL, // Usar la URL base del API
     withCredentials: true, // Enviar cookies con cada petición
     timeout: 10000,
     headers: {
@@ -44,6 +43,8 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
   });
 
   // 🔐 Manejo de sesión expirada
+  // Temporalmente comentado
+  /*
   async function doReAuthenticate() {
     console.warn('La sesión ha expirado o el token no es válido.');
     const authStore = useAuthStore();
@@ -70,6 +71,7 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
       throw error;
     }
   }
+  */
 
   // ✅ Agregar interceptor para refresh automático
   client.addRequestInterceptor({
@@ -116,8 +118,6 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
   // ❗ Manejo de errores de red y autenticación
   client.addResponseInterceptor({
     rejected: (error: any) => {
-      const router = useRouter();
-
       if (!error.response) {
         ElMessage.error($t('authentication.connectionError'));
       } else if (error.response.status === 401) {
@@ -125,12 +125,8 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
 
         const currentPath = window.location.pathname;
         if (!currentPath.includes(LOGIN_PATH)) {
-          router.replace({
-            path: LOGIN_PATH,
-            query: {
-              redirect: encodeURIComponent(currentPath),
-            },
-          });
+          // ✅ Usar window.location en lugar de router para evitar problemas de contexto
+          window.location.href = `${LOGIN_PATH}?redirect=${encodeURIComponent(currentPath)}`;
         }
       } else if (error.response.status === 403) {
         ElMessage.error($t('authentication.forbidden'));
@@ -145,6 +141,8 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
   });
 
   // ✅ Agregar interceptor de refresh automático del token
+  // Temporalmente comentado para evitar conflictos
+  /*
   client.addResponseInterceptor({
     rejected: async (error: any) => {
       // Si es error 401 y no estamos ya intentando refrescar
@@ -171,6 +169,7 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
       return Promise.reject(error);
     }
   });
+  */
 
   return client;
 }

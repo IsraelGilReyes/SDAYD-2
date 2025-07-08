@@ -1,0 +1,70 @@
+{
+  "title": "Demos",
+  "access": {
+    "frontendPermissions": "Permisos Frontend",
+    "backendPermissions": "Permisos Backend", 
+    "pageAccess": "Acceso a Página",
+    "buttonControl": "Control de Botones",
+    "menuVisible403": "Menú Visible (403)",
+    "superVisible": "Visible para Super",
+    "adminVisible": "Visible para Admin",
+    "userVisible": "Visible para Usuario"
+  },
+  "nested": {
+    "title": "Menú Anidado",
+    "menu1": "Menú 1",
+    "menu2": "Menú 2",
+    "menu2_1": "Menú 2-1",
+    "menu3": "Menú 3",
+    "menu3_1": "Menú 3-1",
+    "menu3_2": "Menú 3-2",
+    "menu3_2_1": "Menú 3-2-1"
+  },
+  "outside": {
+    "title": "Páginas Externas",
+    "embedded": "Embebido",
+    "externalLink": "Enlace Externo"
+  },
+  "badge": {
+    "title": "Insignia de Menú",
+    "dot": "Insignia de Punto",
+    "text": "Insignia de Texto",
+    "color": "Color de Insignia"
+  },
+  "activeIcon": {
+    "title": "Icono de Menú Activo",
+    "children": "Icono Activo de Hijos"
+  },
+  "fallback": {
+    "title": "Página de Respaldo"
+  },
+  "features": {
+    "title": "Características",
+    "hideChildrenInMenu": "Ocultar Hijos en Menú",
+    "loginExpired": "Sesión Expirada",
+    "icons": "Iconos",
+    "watermark": "Marca de Agua",
+    "tabs": "Pestañas",
+    "tabDetail": "Página de Detalle de Pestaña",
+    "fullScreen": "Pantalla Completa",
+    "clipboard": "Portapapeles",
+    "menuWithQuery": "Menú con Query",
+    "openInNewWindow": "Abrir en Nueva Ventana",
+    "fileDownload": "Descarga de Archivo"
+  },
+  "breadcrumb": {
+    "navigation": "Navegación de Breadcrumb",
+    "lateral": "Modo Lateral",
+    "lateralDetail": "Detalle Modo Lateral",
+    "level": "Modo Nivel",
+    "levelDetail": "Detalle Modo Nivel"
+  },
+  "vben": {
+    "title": "Proyecto",
+    "about": "Acerca de",
+    "document": "Documentación",
+    "antdv": "Versión Ant Design Vue",
+    "naive-ui": "Versión Naive UI",
+    "element-plus": "Versión Element Plus"
+  }
+}

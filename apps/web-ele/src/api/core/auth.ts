@@ -65,7 +65,7 @@ export async function refreshTokenApi() {
 
 
 export async function getUserInfoApi() {
-  return baseRequestClient.get('/auth/info/', {
+  return requestClient.get('/auth/info/', {
     withCredentials: true,
   });
 }
