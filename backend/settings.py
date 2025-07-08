@@ -78,7 +78,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',  # Para JWT
     'rest_framework_simplejwt.token_blacklist', # Para manejar la lista negra de tokens JWT
     'authentication',
-    'dashboard',
+    'incidents',# Aplicación para manejar los incidentes
 ]
 
 MIDDLEWARE = [
@@ -118,10 +118,15 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'utim_db',
+        'USER': 'developer',
+        'PASSWORD': 'oSz_hx;AXv(h[MUz',
+        'HOST': '34.60.230.109',
+        'PORT':  '3306',
     }
 }
+
 
 
 # Password validation
