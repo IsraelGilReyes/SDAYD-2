@@ -9,7 +9,7 @@ const routes: RouteRecordRaw[] = [
     meta: {
       icon: 'lucide:layout-dashboard',
       order: -1,
-      title: 'Registro de incidentes',
+      title: 'Incidentes',
       // Accesible para ambos roles
       authority: ['usuario', 'administrador'],
     },
@@ -24,7 +24,7 @@ const routes: RouteRecordRaw[] = [
         meta: {
           affixTab: true,
           icon: 'lucide:alert-triangle',
-          title: $t('page.dashboard.title'),
+          title: 'Registro de incidente',
           // Accesible para ambos roles
           authority: ['usuario', 'administrador'],
         },
