@@ -6,7 +6,7 @@
         <span>Gestión de Incidentes</span>
       </div>
     </template>
-    <IncidentForm @add-incident="addIncident" />
+    <!-- Quitar <IncidentForm /> -->
     <el-divider />
     
     <el-table
@@ -58,9 +58,10 @@
       </el-button>
     </div>
     
-    <div v-else class="empty-message">
+    <!-- Quitar mensaje de tabla vacía -->
+    <!-- <div v-else class="empty-message">
       <el-empty description="No hay incidentes registrados." />
-    </div>
+    </div> -->
   </el-card>
 </template>
 
@@ -69,6 +70,8 @@ import { ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import IncidentForm from './IncidentForm.vue';
 import { Edit as IepEdit, Delete as IepDelete, Warning as IepWarning } from '@element-plus/icons-vue';
+import { storeToRefs } from 'pinia';
+import { useIncidentsStore } from '@/stores/incidents';
 
 interface Incident {
   type: string;
@@ -89,11 +92,12 @@ interface Incident {
   securityCameras?: string;
 }
 
-const incidents = ref<Incident[]>([]);
+const incidentsStore = useIncidentsStore();
+const { incidents } = storeToRefs(incidentsStore);
 const showAllIncidents = ref(false);
 
 function addIncident(incident: any) {
-  incidents.value.push({
+  incidentsStore.addIncident({
     type: incident.type,
     date: incident.date,
     time: incident.time,
@@ -126,7 +130,7 @@ function deleteIncident(index: number) {
     type: 'warning',
   })
     .then(() => {
-      incidents.value.splice(index, 1);
+      incidentsStore.deleteIncident(index);
       ElMessage.success('Incidente eliminado');
     })
     .catch(() => {

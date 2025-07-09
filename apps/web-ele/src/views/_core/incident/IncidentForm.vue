@@ -1027,13 +1027,15 @@ onUnmounted(() => {
   align-items: flex-start;
   justify-content: center;
   padding: 20px 0 40px 0;
+  max-width: 1300px;
+  margin: 0 auto;
 }
 .glass-card {
   background: #fff;
   border-radius: 24px;
   border: 2.5px solid #FFB200;
   width: 100%;
-  max-width: 650px;
+  max-width: 1150px;
   padding: 40px 32px 32px 32px;
   box-shadow: 0 8px 32px #FFE893, 0 2px 8px #FFE893;
 }
