@@ -237,5 +237,8 @@
     "nolebase",
     "rollup",
     "vitest"
-  ]
+  ],
+  "[python]": {
+    "diffEditor.ignoreTrimWhitespace": true
+  }
 }
