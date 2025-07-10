@@ -52,12 +52,12 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        name: 'Test',
-        path: '/dashboard/test',
+        name: 'UserManagement',
+        path: '/dashboard/user-management',
         component: () => import('../../../views/dashboard/test.vue'),
         meta: {
-          icon: 'lucide:test-tube',
-          title: 'Test Page',
+          icon: 'lucide:users-cog',
+          title: 'Administración de Usuarios',
           authority: ['administrador'],
         },
       },

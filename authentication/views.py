@@ -63,8 +63,8 @@ class LoginView(TokenObtainPairView):
             value=access_token,
             httponly=True,
             secure=False,  # ⚠️ pon True si usas HTTPS
-            samesite='Strict',
-            max_age=60 * 60  # 1 hora
+            samesite='Lax',  # Cambiar a Lax para desarrollo
+            max_age=60 * 60  # 1 hora - debe coincidir con ACCESS_TOKEN_LIFETIME
         )
 
         response.set_cookie(
@@ -72,8 +72,8 @@ class LoginView(TokenObtainPairView):
             value=refresh_token,
             httponly=True,
             secure=False,  # ⚠️ pon True si usas HTTPS
-            samesite='Strict',
-            max_age=24 * 60 * 60  # 24 horas
+            samesite='Lax',  # Cambiar a Lax para desarrollo
+            max_age=24 * 60 * 60  # 24 horas - debe coincidir con REFRESH_TOKEN_LIFETIME
         )
 
         return response
@@ -151,8 +151,8 @@ def logout(request):
         'message': 'Logout exitoso'
     }, status=status.HTTP_200_OK)
 
-    response.delete_cookie('access_token', samesite='Strict')
-    response.delete_cookie('refresh_token', samesite='Strict')
+    response.delete_cookie('access_token', samesite='Lax')
+    response.delete_cookie('refresh_token', samesite='Lax')
     response.delete_cookie('csrftoken')
 
     # Intentamos invalidar el token si existe
@@ -200,8 +200,8 @@ def refresh_token(request):
             value=new_access_token,
             httponly=True,
             secure=False,  # ⚠️ pon True si usas HTTPS
-            samesite='Strict',
-            max_age=60 * 60  # 1 hora
+            samesite='Lax',  # Cambiar a Lax para desarrollo
+            max_age=60 * 60  # 1 hora - debe coincidir con ACCESS_TOKEN_LIFETIME
         )
         
         return response
@@ -282,4 +282,211 @@ def create_user(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# Vista para obtener información de un usuario específico
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_detail(request, user_id):
+    try:
+        user = User.objects.get(id=user_id)
+        serializer = UserSerializer(user)
+        return Response({
+            'status': 'success',
+            'user': serializer.data
+        })
+    except User.DoesNotExist:
+        return Response({
+            'status': 'error',
+            'message': 'Usuario no encontrado'
+        }, status=status.HTTP_404_NOT_FOUND)
+
+# Vista para actualizar un usuario
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_user(request, user_id):
+    try:
+        user = User.objects.get(id=user_id)
+        serializer = UserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            
+            # Si se especifica un rol, asignarlo
+            role_name = request.data.get('role_name')
+            if role_name:
+                try:
+                    role = Role.objects.get(name=role_name)
+                    # Eliminar roles existentes del usuario
+                    UserRole.objects.filter(user=user).delete()
+                    # Asignar nuevo rol
+                    UserRole.objects.create(
+                        user=user,
+                        role=role,
+                        assigned_by=request.user
+                    )
+                except Role.DoesNotExist:
+                    pass
+            
+            return Response({
+                'status': 'success',
+                'message': 'Usuario actualizado exitosamente',
+                'user': serializer.data
+            })
+        return Response({
+            'status': 'error',
+            'message': 'Datos inválidos',
+            'errors': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+    except User.DoesNotExist:
+        return Response({
+            'status': 'error',
+            'message': 'Usuario no encontrado'
+        }, status=status.HTTP_404_NOT_FOUND)
+
+# Vista para eliminar un usuario
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_user(request, user_id):
+    try:
+        user = User.objects.get(id=user_id)
+        
+        # Prevenir que el usuario se elimine a sí mismo
+        if user.id == request.user.id:
+            return Response({
+                'status': 'error',
+                'message': 'No puedes eliminar tu propio usuario'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Eliminar relaciones de roles primero
+        UserRole.objects.filter(user=user).delete()
+        
+        # Eliminar el usuario
+        user.delete()
+        
+        return Response({
+            'status': 'success',
+            'message': 'Usuario eliminado exitosamente'
+        })
+    except User.DoesNotExist:
+        return Response({
+            'status': 'error',
+            'message': 'Usuario no encontrado'
+        }, status=status.HTTP_404_NOT_FOUND)
+
+# Vista para cambiar la contraseña de un usuario
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def change_user_password(request, user_id):
+    try:
+        user = User.objects.get(id=user_id)
+        
+        new_password = request.data.get('new_password')
+        confirm_password = request.data.get('confirm_password')
+        
+        if not new_password or not confirm_password:
+            return Response({
+                'status': 'error',
+                'message': 'Se requieren ambas contraseñas'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if new_password != confirm_password:
+            return Response({
+                'status': 'error',
+                'message': 'Las contraseñas no coinciden'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if len(new_password) < 6:
+            return Response({
+                'status': 'error',
+                'message': 'La contraseña debe tener al menos 6 caracteres'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Cambiar la contraseña
+        user.set_password(new_password)
+        user.save()
+        
+        return Response({
+            'status': 'success',
+            'message': 'Contraseña cambiada exitosamente'
+        })
+    except User.DoesNotExist:
+        return Response({
+            'status': 'error',
+            'message': 'Usuario no encontrado'
+        }, status=status.HTTP_404_NOT_FOUND)
+
+# Vista para crear un nuevo usuario completo (admin)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_user_complete(request):
+    """
+    Vista para crear un usuario completo con rol asignado
+    """
+    try:
+        # Validar datos requeridos
+        username = request.data.get('username')
+        email = request.data.get('email')
+        password = request.data.get('password')
+        role_name = request.data.get('role_name', 'usuario')
+        
+        if not username or not email or not password:
+            return Response({
+                'status': 'error',
+                'message': 'Se requieren username, email y password'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Verificar si el usuario ya existe
+        if User.objects.filter(username=username).exists():
+            return Response({
+                'status': 'error',
+                'message': 'El nombre de usuario ya existe'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if User.objects.filter(email=email).exists():
+            return Response({
+                'status': 'error',
+                'message': 'El email ya está registrado'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Crear el usuario
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+            first_name=request.data.get('first_name', ''),
+            last_name=request.data.get('last_name', ''),
+            is_active=request.data.get('is_active', True),
+            is_staff=request.data.get('is_staff', False)
+        )
+        
+        # Asignar rol
+        try:
+            role = Role.objects.get(name=role_name)
+            UserRole.objects.create(
+                user=user,
+                role=role,
+                assigned_by=request.user
+            )
+        except Role.DoesNotExist:
+            # Si el rol no existe, asignar rol de usuario por defecto
+            default_role = Role.objects.get(name='usuario')
+            UserRole.objects.create(
+                user=user,
+                role=default_role,
+                assigned_by=request.user
+            )
+        
+        # Serializar y devolver el usuario creado
+        serializer = UserSerializer(user)
+        return Response({
+            'status': 'success',
+            'message': 'Usuario creado exitosamente',
+            'user': serializer.data
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        return Response({
+            'status': 'error',
+            'message': 'Error interno del servidor',
+            'detail': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

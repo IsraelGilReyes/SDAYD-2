@@ -89,23 +89,14 @@ function createRequestClient(_baseURL: string, options?: RequestClientOptions) {
   // ✅ Agregar interceptor para refresh automático
   client.addRequestInterceptor({
     fulfilled: async (config) => {
-      // Solo marcar que las cookies deben enviarse en peticiones protegidas
-      const publicRoutes = ['/auth/login/', '/auth/refresh/'];
-      const isPublicRoute = publicRoutes.some(route => config.url?.includes(route));
+      // Asegurar que withCredentials esté habilitado para todas las peticiones
+      config.withCredentials = true;
 
-      if (!isPublicRoute) {
-        config.withCredentials = true;
-      }
+      // Agregar headers específicos para rutas protegidas
+      const protectedRoutes = ['/auth/', '/incidents/'];
+      const isProtectedRoute = protectedRoutes.some(route => config.url?.includes(route));
 
-      // Logout también debe enviar cookies
-      if (config.url?.includes('/auth/logout/')) {
-        config.withCredentials = true;
-      }
-
-      // Asegurar que las rutas de incidentes envíen credenciales
-      if (config.url?.includes('/incidents/')) {
-        config.withCredentials = true;
-        // Agregar header adicional para autenticación
+      if (isProtectedRoute) {
         const csrfToken = getCsrfToken();
         if (csrfToken) {
           config.headers['X-CSRFToken'] = csrfToken;
@@ -119,10 +110,8 @@ function createRequestClient(_baseURL: string, options?: RequestClientOptions) {
   // ✅ Devolver solo los datos si la respuesta es exitosa
   client.addResponseInterceptor({
     fulfilled: (response) => {
-      if (response.status >= 200 && response.status < 300) {
-        return response.data;
-      }
-      return response;
+      // Siempre devolver solo los datos para respuestas exitosas
+      return response.data;
     },
     rejected: (error) => {
       return Promise.reject(error);

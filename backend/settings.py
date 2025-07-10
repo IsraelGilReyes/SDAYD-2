@@ -174,7 +174,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Configuración de JWT
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),  # Cambiado a 1 minuto para pruebas
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),  # Cambiado a 1 hora para que no expire tan rápido
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': True,  # Genera nuevo refresh token al hacer refresh
     'BLACKLIST_AFTER_ROTATION': True,  # Invalida refresh tokens antiguos
@@ -182,7 +182,7 @@ SIMPLE_JWT = {
     'TOKEN_BACKLIST_ENABLED': True,  # Habilita la lista negra de tokens
     
     'ALGORITHM': 'HS256',
-    'SIGNING_KEY': 'su_clave_secreta_aqui',  # Usa la SECRET_KEY de Django
+    'SIGNING_KEY': SECRET_KEY,  # Usar la SECRET_KEY de Django
     'VERIFYING_KEY': None,
     
     'AUTH_HEADER_TYPES': ('Bearer',),
@@ -199,7 +199,8 @@ SIMPLE_JWT = {
 # Configuración de REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication', # Para manejar JWT
+        'authentication.authentication.CookieJWTAuthentication', # Para manejar JWT desde cookies
+        'rest_framework_simplejwt.authentication.JWTAuthentication', # Para manejar JWT desde headers
         'rest_framework.authentication.SessionAuthentication', # Para manejar sesiones de Django
     ),
     'DEFAULT_PERMISSION_CLASSES': (
