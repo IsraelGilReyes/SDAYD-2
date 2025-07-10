@@ -2,6 +2,10 @@ from django.db import models
 
 # Modelo: Rol
 class Rol(models.Model):
+    ROL_CHOICES = [
+        ('admin', 'Administrador'),
+        ('user','User'),
+    ]
     id_rol = models.AutoField(primary_key=True)
     rol = models.CharField(max_length=50, unique=True)
 
@@ -20,13 +24,22 @@ class Usuario(models.Model):
 
 # Modelo: Ciudadano
 class Ciudadano(models.Model):
+    TIPO_PERSONA_CHOICES = [
+        ('victima', 'Víctima'),
+        ('testigo', 'Testigo'),
+        ('familiar', 'Familiar'),
+    ]
+
     id_ciudadano = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=100)
-    apellidos = models.CharField(max_length=100)
     no_telefono = models.CharField(max_length=20, blank=True, null=True)
+    tipo_persona = models.CharField(
+        max_length=10, 
+        choices=TIPO_PERSONA_CHOICES
+    )
 
     def __str__(self):
-        return f"{self.nombre} {self.apellidos}"
+        return f"{self.nombre} ({self.tipo_persona})"
 
 # Modelo: Tipo de Incidente
 class TipoIncidente(models.Model):
