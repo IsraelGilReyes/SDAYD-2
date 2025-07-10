@@ -1,4 +1,4 @@
-// apps/web-ele/src/stores/plugins/persistence.ts
+// apps/web-ele/src/store/plugins/persistence.ts
 import type { UserInfo } from '@vben/types';
 
 const USER_INFO_KEY = 'vben_user_info';

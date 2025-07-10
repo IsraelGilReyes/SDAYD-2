@@ -12,11 +12,11 @@
 
 <script setup lang="ts">
 import IncidentForm from '../_core/incident/IncidentForm.vue'
-import { useIncidentsStore } from '@/stores/incidents';
+import { useIncidentsStore, type Incident } from '#/store';
 
 const incidentsStore = useIncidentsStore();
 
-function handleAddIncident(incident) {
+function handleAddIncident(incident: Incident) {
   incidentsStore.addIncident(incident);
 }
 </script>

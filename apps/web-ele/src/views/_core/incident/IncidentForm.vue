@@ -15,6 +15,22 @@
       </div>
 
       <el-form :model="form" :rules="rules" ref="formRef" class="neon-form">
+        <!-- Información del Operador -->
+        <div class="operator-info-section">
+          <div class="operator-tags">
+            <div class="operator-tag">
+              <span class="tag-icon">👤</span>
+              <span class="tag-label">Operador:</span>
+              <span class="tag-value">{{ operatorName }}</span>
+            </div>
+            <div class="operator-tag">
+              <span class="tag-icon">🏷️</span>
+              <span class="tag-label">Rol:</span>
+              <span class="tag-value">{{ operatorRole }}</span>
+            </div>
+          </div>
+        </div>
+
         <!-- Sección 1 - Tipo de Incidente -->
         <div class="form-section">
           <h2 class="section-title">1. Tipo de Incidente</h2>
@@ -113,6 +129,23 @@
               :style="{ background: '#96BBBB' }"
             />
           </el-form-item>
+
+          <!-- Descripción breve del incidente -->
+          <div class="incident-description">
+            <h4 class="description-title">📝 Descripción Breve del Incidente</h4>
+            <el-form-item prop="briefDescription" class="custom-textarea">
+              <el-input
+                v-model="form.briefDescription"
+                type="textarea"
+                :rows="3"
+                placeholder="Proporciona una descripción breve y clara del incidente (máximo 250 caracteres)..."
+                resize="none"
+                maxlength="250"
+                show-word-limit
+                :style="{ background: '#96BBBB' }"
+              />
+            </el-form-item>
+          </div>
         </div>
 
         <!-- Fecha y Hora -->
@@ -196,19 +229,25 @@
         <div class="form-section">
           <h2 class="section-title">3. Ubicación</h2>
           
-          <!-- Buscador de direcciones -->
-          <el-form-item prop="exactAddress" class="custom-input">
-            <el-input 
-              v-model="form.exactAddress" 
-              placeholder="Dirección exacta (ej: Calle 5 #10-20)"
-              prefix-icon="Location"
-              :style="{ background: '#96BBBB' }"
-            />
-          </el-form-item>
-
           <!-- Mapa Interactivo -->
           <div class="map-section">
-            <h3 class="map-title">📍 Mapa de Ubicación</h3>
+            <h3 class="map-title">�️ Mapa Interactivo de Ubicación - Vista Ampliada</h3>
+            
+            <!-- Instrucciones de uso -->
+            <div class="map-instructions">
+              <div class="instruction-item">
+                <span class="instruction-icon">🖱️</span>
+                <span>Haz clic en el mapa para seleccionar una ubicación</span>
+              </div>
+              <div class="instruction-item">
+                <span class="instruction-icon">🔄</span>
+                <span>Arrastra el marcador para cambiar la posición</span>
+              </div>
+              <div class="instruction-item">
+                <span class="instruction-icon">📍</span>
+                <span>Los campos se llenarán automáticamente</span>
+              </div>
+            </div>
             
             <!-- Barra de búsqueda del mapa -->
             <div class="map-search-container">
@@ -229,10 +268,35 @@
               </el-button>
             </div>
             
-            <div class="map-container" 
-                 @mouseenter="expandMap" 
-                 @mouseleave="shrinkMap">
-              <div id="map" class="google-map" :class="{ 'expanded': isMapExpanded }"></div>
+            <div class="map-container">
+              <div id="map" class="osm-map"></div>
+              
+              <!-- Controles flotantes del mapa -->
+              <div class="map-floating-controls" v-if="mapInstance">
+                <!-- Botón para centrar el mapa en la ubicación seleccionada -->
+                <el-button 
+                  type="primary" 
+                  size="small"
+                  circle
+                  @click="centerMapOnSelection"
+                  title="Centrar mapa en la ubicación seleccionada"
+                  class="floating-control-btn center-btn"
+                >
+                  🎯
+                </el-button>
+                
+                <!-- Botón de recarga del mapa -->
+                <el-button 
+                  type="warning" 
+                  size="small"
+                  circle
+                  @click="reloadMap"
+                  title="Recargar mapa si no se ve correctamente"
+                  class="floating-control-btn reload-btn"
+                >
+                  🔄
+                </el-button>
+              </div>
               
               <!-- Controles del mapa -->
               <div class="map-controls">
@@ -254,15 +318,7 @@
                   <i class="el-icon-document-copy"></i>
                   Copiar Coordenadas
                 </el-button>
-                <el-button 
-                  type="info" 
-                  size="small" 
-                  @click="showSavedLocations"
-                  class="map-control-btn saved-locations-btn"
-                >
-                  <i class="el-icon-folder-opened"></i>
-                  Ubicaciones Guardadas
-                </el-button>
+
               </div>
 
                         <!-- Información del mapa -->
@@ -272,88 +328,105 @@
               <span class="coords-value">{{ form.latitude || 'No especificadas' }}, {{ form.longitude || 'No especificadas' }}</span>
             </div>
           </div>
-          
-          <!-- Campos manuales de coordenadas -->
-          <div class="coordinates-input-section">
-            <h4 style="margin: 10px 0; color: #6366f1; font-size: 0.9rem;">📝 Coordenadas Manuales (si el GPS no funciona)</h4>
-            <div class="coordinates-row">
-              <el-form-item prop="latitude" class="coordinate-input">
-                <el-input 
-                  v-model="form.latitude" 
-                  placeholder="Latitud (ej: 19.4326)"
-                  prefix-icon="Location"
-                  :style="{ background: '#96BBBB' }"
-                />
-              </el-form-item>
-              <el-form-item prop="longitude" class="coordinate-input">
-                <el-input 
-                  v-model="form.longitude" 
-                  placeholder="Longitud (ej: -99.1332)"
-                  prefix-icon="Location"
-                  :style="{ background: '#96BBBB' }"
-                />
-              </el-form-item>
-            </div>
-            <div style="text-align: center; margin-top: 10px;">
-              <el-button 
-                type="primary" 
-                size="small" 
-                @click="updateMapFromCoordinates"
-                class="update-map-btn"
-              >
-                <i class="el-icon-refresh"></i>
-                Actualizar Mapa
-              </el-button>
-            </div>
-          </div>
             </div>
           </div>
 
-          <el-form-item prop="securityCameras" class="custom-textarea">
-            <el-input
-              v-model="form.securityCameras"
-              type="textarea"
-              :rows="2"
-              placeholder="Cámaras de seguridad cercanas"
-              resize="none"
-              :style="{ background: '#96BBBB' }"
-            />
-          </el-form-item>
-        </div>
+          <!-- Campos detallados de ubicación -->
+          <div class="detailed-location-section">
+            <h4 class="location-fields-title">📍 Información Detallada de la Ubicación</h4>
+            
+            <div class="location-fields-grid">
+              <!-- Primera fila -->
+              <div class="location-row">
+                <el-form-item prop="calle" class="custom-input location-field">
+                  <el-input 
+                    v-model="form.calle" 
+                    placeholder="Calle"
+                    prefix-icon="Location"
+                    :style="{ background: '#96BBBB' }"
+                  />
+                </el-form-item>
+                
+                <el-form-item prop="numero" class="custom-input location-field">
+                  <el-input 
+                    v-model="form.numero" 
+                    placeholder="Número"
+                    prefix-icon="House"
+                    :style="{ background: '#96BBBB' }"
+                  />
+                </el-form-item>
+              </div>
+              
+              <!-- Segunda fila -->
+              <div class="location-row">
+                <el-form-item prop="colonia" class="custom-input location-field">
+                  <el-input 
+                    v-model="form.colonia" 
+                    placeholder="Colonia"
+                    prefix-icon="Map"
+                    :style="{ background: '#96BBBB' }"
+                  />
+                </el-form-item>
+                
+                <el-form-item prop="codigo_postal" class="custom-input location-field">
+                  <el-input 
+                    v-model="form.codigo_postal" 
+                    placeholder="Código Postal"
+                    prefix-icon="Postcard"
+                    :style="{ background: '#96BBBB' }"
+                  />
+                </el-form-item>
+              </div>
+              
+              <!-- Tercera fila -->
+              <div class="location-row">
+                <el-form-item prop="ciudad" class="custom-input location-field">
+                  <el-input 
+                    v-model="form.ciudad" 
+                    placeholder="Ciudad"
+                    prefix-icon="Office"
+                    :style="{ background: '#96BBBB' }"
+                  />
+                </el-form-item>
+                
+                <el-form-item prop="pais" class="custom-input location-field">
+                  <el-input 
+                    v-model="form.pais" 
+                    placeholder="País"
+                    prefix-icon="Place"
+                    :style="{ background: '#96BBBB' }"
+                  />
+                </el-form-item>
+              </div>
+              
+              <!-- Referencias (campo completo) -->
+              <div class="location-row">
+                <el-form-item prop="referencias" class="custom-input location-field-full">
+                  <el-input 
+                    v-model="form.referencias" 
+                    placeholder="Referencias (ej: Entre calle A y B, frente al parque, etc.)"
+                    prefix-icon="Flag"
+                    :style="{ background: '#96BBBB' }"
+                  />
+                </el-form-item>
+              </div>
+              
+              <!-- Botón para limpiar campos de ubicación -->
+              <div class="location-actions">
+                <el-button 
+                  type="info" 
+                  size="small" 
+                  @click="clearLocationFields"
+                  class="clear-location-btn"
+                >
+                  <i class="el-icon-delete"></i>
+                  Limpiar Campos de Ubicación
+                </el-button>
+              </div>
+            </div>
+          </div>
 
-        <!-- Sección 4 - Descripción -->
-        <div class="form-section">
-          <h2 class="section-title">4. Detalles</h2>
-          <el-form-item prop="description" class="custom-textarea">
-            <el-input
-              v-model="form.description"
-              type="textarea"
-              :rows="5"
-              placeholder="Describe lo ocurrido con todos los detalles posibles..."
-              resize="none"
-              :style="{ background: '#96BBBB' }"
-            />
-          </el-form-item>
-          <el-form-item prop="officerObservations" class="custom-textarea">
-            <el-input
-              v-model="form.officerObservations"
-              type="textarea"
-              :rows="3"
-              placeholder="Observaciones del oficial"
-              resize="none"
-              :style="{ background: '#96BBBB' }"
-            />
-          </el-form-item>
-          <el-form-item prop="officerConclusions" class="custom-textarea" :required="false">
-            <el-input
-              v-model="form.officerConclusions"
-              type="textarea"
-              :rows="3"
-              placeholder="Conclusiones del oficial (opcional)"
-              resize="none"
-              :style="{ background: '#96BBBB' }"
-            />
-          </el-form-item>
+
         </div>
 
         <!-- Botón de Envío -->
@@ -369,295 +442,324 @@
         </el-button>
       </el-form>
     </div>
-    
-    <!-- Modal de ubicaciones guardadas -->
-    <el-dialog
-      v-model="savedLocationsVisible"
-      title="Ubicaciones Guardadas"
-      width="700px"
-      :close-on-click-modal="false"
-      class="saved-locations-modal"
-    >
-      <div class="saved-locations-content">
-        <div v-if="savedLocations.length === 0" class="empty-locations">
-          <el-empty description="No hay ubicaciones guardadas" />
-        </div>
-        
-        <div v-else class="locations-list">
-          <div 
-            v-for="(location, index) in (showAllLocations ? savedLocations : savedLocations.slice(0, 20))" 
-            :key="index"
-            class="location-item"
-            @click="selectSavedLocation(location)"
-          >
-            <div class="location-info">
-              <div class="location-name">
-                <i class="el-icon-location"></i>
-                {{ location.name }}
-              </div>
-              <div class="location-address">
-                <i class="el-icon-house"></i>
-                {{ location.address }}
-              </div>
-              <div class="location-coords">
-                <i class="el-icon-coordinate"></i>
-                {{ location.lat }}, {{ location.lng }}
-              </div>
-              <div class="location-date">
-                <i class="el-icon-time"></i>
-                {{ formatDate(location.timestamp) }}
-              </div>
-            </div>
-            <div class="location-actions">
-              <el-button 
-                type="primary" 
-                size="small" 
-                @click.stop="selectSavedLocation(location)"
-                class="action-btn use-btn"
-              >
-                <i class="el-icon-check"></i>
-                Usar
-              </el-button>
-              <el-button 
-                type="danger" 
-                size="small" 
-                @click.stop="deleteSavedLocation(index)"
-                class="action-btn delete-btn"
-              >
-                <i class="el-icon-delete"></i>
-                Eliminar
-              </el-button>
-            </div>
-          </div>
-          
-          <!-- Botón Ver más -->
-          <div v-if="savedLocations.length > 20" class="show-more-container">
-            <el-button 
-              type="info" 
-              @click="showAllLocations = !showAllLocations"
-              class="show-more-btn"
-            >
-              <span v-if="!showAllLocations">
-                <i class="el-icon-arrow-down"></i>
-                Ver más ({{ savedLocations.length - 20 }} más)
-              </span>
-              <span v-else>
-                <i class="el-icon-arrow-up"></i>
-                Ver menos
-              </span>
-            </el-button>
-          </div>
-        </div>
-      </div>
-      
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="savedLocationsVisible = false" class="close-btn">
-            <i class="el-icon-close"></i>
-            Cerrar
-          </el-button>
-          <el-button type="primary" @click="saveCurrentLocation" class="save-btn">
-            <i class="el-icon-folder-add"></i>
-            Guardar Ubicación Actual
-          </el-button>
-        </div>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
-import { ElMessage } from 'element-plus';
-import { GOOGLE_MAPS_CONFIG, getMapsApiUrl, isApiKeyConfigured, showAlternativeMap } from '../../../config/maps';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import { useUserStore } from '@vben/stores';
+import { useIncidentsStore } from '#/store';
+
+// Declaraciones de tipos para Leaflet
+declare global {
+  interface Window {
+    L: any;
+  }
+}
 
 const emit = defineEmits(['add-incident']);
 
 const formRef = ref();
-let map: any = null;
-let marker: any = null;
-let autocomplete: any = null;
-let referenceMarkers: any[] = [];
-let escapeRouteMarkers: any[] = [];
-let infoWindow: any = null;
+const userStore = useUserStore();
+const incidentsStore = useIncidentsStore();
 
-const isMapExpanded = ref(false);
+// Obtener información del usuario de la sesión
+const currentUser = computed(() => userStore.userInfo || {});
+const operatorName = computed(() => {
+  const user = currentUser.value as any;
+  return user.realName || user.username || 'Usuario no identificado';
+});
+const operatorRole = computed(() => {
+  const user = currentUser.value as any;
+  return user.roles?.[0] || 'Rol no asignado';
+});
+
+// Configuración de OpenStreetMap
+const OSM_CONFIG = {
+  DEFAULT_LOCATION: { lat: 19.4326, lng: -99.1332 }, // México
+  DEFAULT_ZOOM: 13,
+  TILE_URL: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  ATTRIBUTION: '© OpenStreetMap contributors'
+};
+
+// Variables para el mapa interactivo
+let mapInstance: any = null;
+let mapMarker: any = null;
+
 const mapSearchQuery = ref('');
-const savedLocationsVisible = ref(false);
-const savedLocations = ref<any[]>([]);
-const showAllLocations = ref(false);
 
 const form = ref({
   type: '',
   otherType: '',
+  briefDescription: '',
   name: '',
   phone: '',
   personType: '',
-  exactAddress: '',
-  street: '',
-  extNumber: '',
-  intNumber: '',
-  description: '',
   date: '',
   time: '',
   lugar: '',
-  officerObservations: '',
-  officerConclusions: '',
   latitude: '',
   longitude: '',
-  securityCameras: '',
+  // Campos de ubicación detallada
+  calle: '',
+  numero: '',
+  colonia: '',
+  codigo_postal: '',
+  ciudad: '',
+  pais: '',
+  referencias: '',
 });
 
 const rules = {
   type: [ { required: true, message: 'Selecciona el tipo de incidente', trigger: 'change' } ],
+  briefDescription: [ 
+    { required: true, message: 'Ingresa una descripción breve del incidente', trigger: 'blur' },
+    { min: 10, message: 'La descripción debe tener al menos 10 caracteres', trigger: 'blur' },
+    { max: 250, message: 'La descripción no debe exceder 250 caracteres', trigger: 'blur' }
+  ],
   date: [ { required: true, message: 'Selecciona la fecha', trigger: 'change' } ],
   time: [ { required: true, message: 'Selecciona la hora', trigger: 'change' } ],
   name: [ { required: true, message: 'Ingresa el nombre', trigger: 'blur' } ],
   phone: [ { required: true, message: 'Ingresa el teléfono', trigger: 'blur' } ],
   personType: [ { required: true, message: 'Selecciona el tipo de persona', trigger: 'change' } ],
-  exactAddress: [ { required: true, message: 'Ingresa la dirección exacta', trigger: 'blur' } ],
-  description: [ { required: true, message: 'Ingresa la descripción', trigger: 'blur' } ],
-  officerObservations: [ { required: true, message: 'Ingresa las observaciones del oficial', trigger: 'blur' } ],
+  // Validaciones opcionales para campos de ubicación
+  codigo_postal: [ 
+    { pattern: /^\d{5}$/, message: 'El código postal debe tener 5 dígitos', trigger: 'blur' } 
+  ],
 };
 
-// Cargar Google Maps API
-function loadGoogleMapsAPI() {
-  return new Promise((resolve, reject) => {
-    if (window.google && window.google.maps) {
-      resolve(window.google.maps);
-      return;
-    }
-
-    // Verificar si hay API key configurada
-    if (!isApiKeyConfigured()) {
-      // Sin API key, usar alternativa
-      showAlternativeMap();
-      reject(new Error('API key no configurada'));
-      return;
-    }
-
-    try {
+// Función para cargar Leaflet.js dinámicamente
+async function loadLeaflet() {
+  if (window.L) return; // Ya está cargado
+  
+  try {
+    // Cargar CSS de Leaflet
+    const linkElement = document.createElement('link');
+    linkElement.rel = 'stylesheet';
+    linkElement.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    linkElement.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+    linkElement.crossOrigin = '';
+    document.head.appendChild(linkElement);
+    
+    // Esperar a que el CSS se cargue
+    await new Promise(resolve => {
+      linkElement.onload = resolve;
+      linkElement.onerror = resolve; // Continuar aunque falle el CSS
+    });
+    
+    // Cargar JS de Leaflet
+    return new Promise((resolve, reject) => {
       const script = document.createElement('script');
-      script.src = getMapsApiUrl();
-      script.async = true;
-      script.defer = true;
-      script.onload = () => resolve(window.google.maps);
-      script.onerror = reject;
+      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
+      script.crossOrigin = '';
+      script.onload = () => {
+        console.log('Leaflet cargado correctamente');
+        resolve(true);
+      };
+      script.onerror = (error) => {
+        console.error('Error cargando Leaflet:', error);
+        reject(error);
+      };
       document.head.appendChild(script);
-    } catch (error) {
-      console.error('Error cargando Google Maps:', error);
-      showAlternativeMap();
-      reject(error);
-    }
+    });
+  } catch (error) {
+    console.error('Error en loadLeaflet:', error);
+    throw error;
+  }
+}
+
+// Función para actualizar la vista del mapa
+function updateMapView(lat: number, lng: number) {
+  if (!mapInstance) return;
+  
+  // Centrar el mapa en la nueva ubicación
+  mapInstance.setView([lat, lng], OSM_CONFIG.DEFAULT_ZOOM);
+  
+  // Actualizar o crear marcador
+  updateMarker(lat, lng);
+}
+
+// Función para actualizar el marcador
+function updateMarker(lat: number, lng: number) {
+  if (!mapInstance || !window.L) return;
+  
+  // Remover marcador anterior si existe
+  if (mapMarker) {
+    mapInstance.removeLayer(mapMarker);
+  }
+  
+  // Crear nuevo marcador
+  mapMarker = window.L.marker([lat, lng], {
+    draggable: true // Permite arrastrar el marcador
+  }).addTo(mapInstance);
+  
+  // Agregar popup al marcador
+  mapMarker.bindPopup(`
+    <div style="text-align: center; font-family: Arial, sans-serif;">
+      <strong>📍 Ubicación del Incidente</strong><br>
+      <span style="font-family: monospace; color: #666;">
+        ${lat.toFixed(6)}, ${lng.toFixed(6)}
+      </span><br>
+      <small style="color: #888;">Arrastra el marcador para cambiar la ubicación</small>
+    </div>
+  `).openPopup();
+  
+  // Evento cuando se arrastra el marcador
+  mapMarker.on('dragend', function(event: any) {
+    const marker = event.target;
+    const position = marker.getLatLng();
+    updateFormCoordinates(position.lat, position.lng);
+    
+    // Obtener información de la ubicación
+    reverseGeocode(position.lat, position.lng);
+    
+    ElMessage.success(`Ubicación actualizada: ${position.lat.toFixed(6)}, ${position.lng.toFixed(6)}`);
   });
 }
 
+// Función para actualizar las coordenadas en el formulario
+function updateFormCoordinates(lat: number, lng: number) {
+  form.value.latitude = lat.toFixed(6);
+  form.value.longitude = lng.toFixed(6);
+}
 
-
-// Inicializar mapa
-async function initMap() {
+// Función de geocodificación inversa (coordenadas a dirección)
+async function reverseGeocode(lat: number, lng: number) {
   try {
-    const google = await loadGoogleMapsAPI();
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+    );
+    const data = await response.json();
     
-    // Coordenadas por defecto (México)
-    const defaultLocation = GOOGLE_MAPS_CONFIG.DEFAULT_LOCATION;
-    
-    const mapElement = document.getElementById('map');
-    if (!mapElement) {
-      console.error('Elemento del mapa no encontrado');
-      return;
-    }
-    
-    map = new google.Map(mapElement, {
-      center: defaultLocation,
-      zoom: GOOGLE_MAPS_CONFIG.DEFAULT_ZOOM,
-      styles: GOOGLE_MAPS_CONFIG.MAP_STYLES
-    });
-
-    // Crear marcador principal (rojo)
-    marker = new google.Marker({
-      position: defaultLocation,
-      map: map,
-      draggable: true,
-      title: 'Ubicación del incidente',
-      icon: {
-        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="12" r="10" fill="#FE5D26" stroke="#FFFFFF" stroke-width="2"/>
-            <circle cx="12" cy="12" r="4" fill="#FFFFFF"/>
-          </svg>
-        `),
-        scaledSize: new google.Size(24, 24),
-        anchor: new google.Point(12, 12)
+    if (data && data.display_name) {
+      // Extraer componentes de la dirección si están disponibles
+      const address = data.address || {};
+      
+      // Llenar campos específicos
+      if (address.road || address.street) {
+        form.value.calle = address.road || address.street || '';
       }
-    });
-
-    // Crear infowindow
-    infoWindow = new google.InfoWindow();
-
-    // Actualizar coordenadas cuando se mueve el marcador
-    marker.addListener('dragend', () => {
-      const position = marker.getPosition();
-      form.value.latitude = position.lat().toFixed(6);
-      form.value.longitude = position.lng().toFixed(6);
-      updateInfoWindow();
-    });
-
-    // Permitir hacer clic en el mapa para mover el marcador
-    map.addListener('click', (event: any) => {
-      const position = event.latLng;
-      marker.setPosition(position);
-      form.value.latitude = position.lat().toFixed(6);
-      form.value.longitude = position.lng().toFixed(6);
-      updateInfoWindow();
-    });
-
-    // Configurar autocomplete
-    const input = document.querySelector('input[placeholder="Buscar dirección del incidente..."]');
-    if (input && google.places) {
-      autocomplete = new google.places.Autocomplete(input as HTMLInputElement);
-      autocomplete.addListener('place_changed', onPlaceChanged);
+      
+      if (address.house_number) {
+        form.value.numero = address.house_number;
+      }
+      
+      if (address.neighbourhood || address.suburb || address.quarter) {
+        form.value.colonia = address.neighbourhood || address.suburb || address.quarter || '';
+      }
+      
+      if (address.postcode) {
+        form.value.codigo_postal = address.postcode;
+      }
+      
+      if (address.city || address.town || address.village) {
+        form.value.ciudad = address.city || address.town || address.village || '';
+      }
+      
+      if (address.country) {
+        form.value.pais = address.country;
+      }
+      
+      ElMessage.success(`Dirección obtenida y campos actualizados automáticamente`);
     }
-
-    // Obtener ubicación actual
-    getCurrentLocation();
-
   } catch (error) {
-    console.error('Error cargando Google Maps:', error);
-    showAlternativeMap();
+    console.error('Error en geocodificación inversa:', error);
+    ElMessage.warning('No se pudo obtener información detallada de la ubicación');
   }
 }
 
-// Manejar cambio de lugar seleccionado
-function onPlaceChanged() {
-  const place = autocomplete.getPlace();
-  if (place.geometry) {
-    const position = place.geometry.location;
-    map.setCenter(position);
-    marker.setPosition(position);
-    form.value.latitude = position.lat().toFixed(6);
-    form.value.longitude = position.lng().toFixed(6);
-    form.value.exactAddress = place.formatted_address || '';
-    updateInfoWindow();
+// Inicializar mapa con OpenStreetMap
+async function initMap() {
+  const mapContainer = document.getElementById('map');
+  if (!mapContainer) {
+    console.error('Elemento del mapa no encontrado');
+    return;
+  }
+
+  try {
+    // Cargar Leaflet si no está cargado
+    await loadLeaflet();
+    
+    // Limpiar contenedor del mapa
+    mapContainer.innerHTML = '';
+    
+    // Asegurar que el contenedor tenga dimensiones explícitas (tamaño expandido)
+    mapContainer.style.height = '500px';
+    mapContainer.style.width = '100%';
+    mapContainer.style.position = 'relative';
+    mapContainer.style.zIndex = '1';
+    mapContainer.style.background = '#f8f9fa';
+    
+    // Esperar un poco para que el DOM se actualice
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Crear mapa con Leaflet
+    mapInstance = window.L.map('map', {
+      preferCanvas: false,
+      zoomControl: true,
+      attributionControl: true,
+      fadeAnimation: false,
+      zoomAnimation: false,
+      markerZoomAnimation: false
+    }).setView(
+      [OSM_CONFIG.DEFAULT_LOCATION.lat, OSM_CONFIG.DEFAULT_LOCATION.lng], 
+      OSM_CONFIG.DEFAULT_ZOOM
+    );
+    
+    // Añadir capa de OpenStreetMap
+    window.L.tileLayer(OSM_CONFIG.TILE_URL, {
+      attribution: OSM_CONFIG.ATTRIBUTION,
+      maxZoom: 19,
+      minZoom: 1,
+      opacity: 1,
+      fadeAnimation: false
+    }).addTo(mapInstance);
+    
+    // Forzar que el mapa se redibuje correctamente múltiples veces
+    const forceRedraw = () => {
+      if (mapInstance) {
+        mapInstance.invalidateSize();
+      }
+    };
+    
+    setTimeout(forceRedraw, 200);
+    setTimeout(forceRedraw, 500);
+    setTimeout(forceRedraw, 1000);
+    
+    // Crear marcador inicial
+    updateMarker(OSM_CONFIG.DEFAULT_LOCATION.lat, OSM_CONFIG.DEFAULT_LOCATION.lng);
+    
+    // Actualizar coordenadas en el formulario
+    updateFormCoordinates(OSM_CONFIG.DEFAULT_LOCATION.lat, OSM_CONFIG.DEFAULT_LOCATION.lng);
+    
+    // Evento de clic en el mapa
+    mapInstance.on('click', function(event: any) {
+      const lat = event.latlng.lat;
+      const lng = event.latlng.lng;
+      
+      // Actualizar marcador y formulario
+      updateMarker(lat, lng);
+      updateFormCoordinates(lat, lng);
+      
+      // Obtener información de la ubicación
+      reverseGeocode(lat, lng);
+      
+      ElMessage.success(`Nueva ubicación seleccionada: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+    });
+    
+    ElMessage.success('Mapa interactivo cargado correctamente');
+    
+  } catch (error) {
+    console.error('Error cargando Leaflet:', error);
+    ElMessage.error('Error al cargar el mapa interactivo');
   }
 }
 
-// Actualizar infowindow
-function updateInfoWindow() {
-  const content = `
-    <div style="padding: 10px; font-family: Arial, sans-serif;">
-              <h4 style="margin: 0 0 8px 0; color: #FE5D26;">🚨 Incidente Reportado</h4>
-      <p style="margin: 4px 0;"><strong>Fecha:</strong> ${form.value.date || 'No especificada'}</p>
-      <p style="margin: 4px 0;"><strong>Hora:</strong> ${form.value.time || 'No especificada'}</p>
-      <p style="margin: 4px 0;"><strong>Reportado por:</strong> ${form.value.name || 'No especificado'}</p>
-      <p style="margin: 4px 0;"><strong>Tipo:</strong> ${form.value.type || 'No especificado'}</p>
-    </div>
-  `;
-  infoWindow.setContent(content);
-  infoWindow.open(map, marker);
-}
 
-// Obtener ubicación actual
+
+// Obtener ubicación actual del usuario
 function getCurrentLocation() {
   if (navigator.geolocation) {
     ElMessage.info('Obteniendo tu ubicación actual...');
@@ -669,37 +771,13 @@ function getCurrentLocation() {
           lng: position.coords.longitude
         };
         
-        // Actualizar coordenadas en el formulario
-        form.value.latitude = pos.lat.toFixed(6);
-        form.value.longitude = pos.lng.toFixed(6);
+        // Actualizar marcador y mapa
+        setMarkerPosition(pos.lat, pos.lng);
         
-        // Si estamos usando Google Maps
-        if (map && marker && window.google) {
-          map.setCenter(pos);
-          marker.setPosition(pos);
-          updateInfoWindow();
-        }
+        // Obtener información de la ubicación
+        reverseGeocode(pos.lat, pos.lng);
         
-        // Si estamos usando OpenStreetMap, actualizar el iframe
-        const mapContainer = document.getElementById('map');
-        if (mapContainer && !window.google) {
-          // Crear nuevo iframe con la ubicación actual
-          const newIframe = document.createElement('iframe');
-          newIframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${pos.lng-0.01},${pos.lat-0.01},${pos.lng+0.01},${pos.lat+0.01}&layer=mapnik&marker=${pos.lat},${pos.lng}`;
-          newIframe.style.width = '100%';
-          newIframe.style.height = '100%';
-          newIframe.style.border = 'none';
-          newIframe.style.borderRadius = '10px';
-          newIframe.title = 'Mapa de ubicación';
-          
-          // Reemplazar el iframe existente
-          const existingIframe = mapContainer.querySelector('iframe');
-          if (existingIframe) {
-            existingIframe.replaceWith(newIframe);
-          }
-        }
-        
-        ElMessage.success(`Ubicación actual obtenida: ${pos.lat.toFixed(6)}, ${pos.lng.toFixed(6)}`);
+        ElMessage.success(`Ubicación obtenida: ${pos.lat.toFixed(6)}, ${pos.lng.toFixed(6)}`);
       },
       (error) => {
         console.error('Error obteniendo ubicación:', error);
@@ -732,14 +810,23 @@ function getCurrentLocation() {
 
 
 
-// Expandir mapa
-function expandMap() {
-  isMapExpanded.value = true;
-}
-
-// Contraer mapa
-function shrinkMap() {
-  isMapExpanded.value = false;
+// Función para recargar el mapa si hay problemas
+function reloadMap() {
+  ElMessage.info('Recargando mapa...');
+  
+  // Limpiar mapa actual
+  if (mapInstance) {
+    mapInstance.remove();
+    mapInstance = null;
+  }
+  if (mapMarker) {
+    mapMarker = null;
+  }
+  
+  // Reinicializar después de un breve delay
+  setTimeout(() => {
+    initMap();
+  }, 500);
 }
 
 // Copiar coordenadas al portapapeles
@@ -749,7 +836,7 @@ function copyCoordinates() {
   const coords = `${lat}, ${lng}`;
   
   if (lat === 'No especificada' || lng === 'No especificada') {
-    ElMessage.warning('Primero obtén tu ubicación actual o ingresa coordenadas manualmente');
+    ElMessage.warning('Primero selecciona una ubicación en el mapa');
     return;
   }
   
@@ -771,59 +858,33 @@ function copyCoordinates() {
   });
 }
 
-// Actualizar mapa desde coordenadas manuales
-function updateMapFromCoordinates() {
-  const lat = parseFloat(form.value.latitude);
-  const lng = parseFloat(form.value.longitude);
-  
-  if (isNaN(lat) || isNaN(lng)) {
-    ElMessage.warning('Ingresa coordenadas válidas (números)');
-    return;
-  }
-  
-  if (lat < -90 || lat > 90) {
-    ElMessage.warning('La latitud debe estar entre -90 y 90');
-    return;
-  }
-  
-  if (lng < -180 || lng > 180) {
-    ElMessage.warning('La longitud debe estar entre -180 y 180');
-    return;
-  }
-  
-  // Si estamos usando Google Maps
-  if (map && marker && window.google) {
-    const pos = { lat, lng };
-    map.setCenter(pos);
-    marker.setPosition(pos);
-    updateInfoWindow();
-  }
-  
-  // Si estamos usando OpenStreetMap
-  const mapContainer = document.getElementById('map');
-  if (mapContainer && !window.google) {
-    // Limpiar el contenedor del mapa
-    mapContainer.innerHTML = '';
+// Función para limpiar campos de ubicación
+function clearLocationFields() {
+  ElMessageBox.confirm(
+    '¿Estás seguro de que quieres limpiar todos los campos de ubicación?',
+    'Limpiar campos',
+    {
+      confirmButtonText: 'Sí, limpiar',
+      cancelButtonText: 'Cancelar',
+      type: 'warning',
+    }
+  ).then(() => {
+    // Limpiar campos de ubicación detallada
+    form.value.calle = '';
+    form.value.numero = '';
+    form.value.colonia = '';
+    form.value.codigo_postal = '';
+    form.value.ciudad = '';
+    form.value.pais = '';
+    form.value.referencias = '';
     
-    // Crear nuevo iframe con las coordenadas
-    const newIframe = document.createElement('iframe');
-    newIframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${lng-0.01},${lat-0.01},${lng+0.01},${lat+0.01}&layer=mapnik&marker=${lat},${lng}`;
-    newIframe.style.width = '100%';
-    newIframe.style.height = '100%';
-    newIframe.style.border = 'none';
-    newIframe.style.borderRadius = '10px';
-    newIframe.title = 'Mapa de ubicación';
-    
-    // Agregar el nuevo iframe
-    mapContainer.appendChild(newIframe);
-  }
-  
-  ElMessage.success(`Mapa actualizado a: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+    ElMessage.success('Campos de ubicación limpiados');
+  }).catch(() => {
+    // Usuario canceló
+  });
 }
 
-
-
-// Buscar ubicación
+// Buscar ubicación usando Nominatim (OpenStreetMap)
 async function searchLocation() {
   if (!mapSearchQuery.value.trim()) {
     ElMessage.warning('Ingresa una dirección para buscar');
@@ -846,42 +907,14 @@ async function searchLocation() {
       // Actualizar coordenadas en el formulario
       form.value.latitude = lat.toFixed(6);
       form.value.longitude = lng.toFixed(6);
-      form.value.exactAddress = location.display_name;
       
       // Actualizar mapa
-      updateMapFromCoordinates();
+      setMarkerPosition(lat, lng);
       
       ElMessage.success(`Ubicación encontrada: ${location.display_name}`);
       
-      // Preguntar si quiere guardar la ubicación
-      ElMessageBox.confirm(
-        `¿Estás seguro de guardar esta ubicación?\n\n${location.display_name}`,
-        'Guardar ubicación',
-        {
-          confirmButtonText: 'Sí, guardar',
-          cancelButtonText: 'No, solo mostrar',
-          type: 'info',
-          center: true,
-          customClass: 'location-save-dialog'
-        }
-      ).then(() => {
-        // Guardar la ubicación
-        const newLocation = {
-          name: mapSearchQuery.value,
-          address: location.display_name,
-          lat: lat.toFixed(6),
-          lng: lng.toFixed(6),
-          timestamp: new Date().toISOString()
-        };
-        
-        savedLocations.value.unshift(newLocation); // Agregar al inicio
-        localStorage.setItem('savedLocations', JSON.stringify(savedLocations.value));
-        
-        ElMessage.success('Ubicación guardada en tus ubicaciones favoritas');
-      }).catch(() => {
-        // Usuario canceló, solo mostrar en el mapa
-        ElMessage.info('Ubicación mostrada en el mapa (no guardada)');
-      });
+      // Automáticamente obtener información adicional de la ubicación
+      reverseGeocode(lat, lng);
       
     } else {
       ElMessage.warning('No se encontró la ubicación. Intenta con una dirección más específica.');
@@ -892,128 +925,146 @@ async function searchLocation() {
   }
 }
 
-// Mostrar ubicaciones guardadas
-function showSavedLocations() {
-  savedLocationsVisible.value = true;
-}
-
-// Guardar ubicación actual
-function saveCurrentLocation() {
-  const lat = form.value.latitude;
-  const lng = form.value.longitude;
-  const address = form.value.exactAddress;
+// Función para centrar el mapa en la ubicación seleccionada
+function centerMapOnSelection() {
+  const lat = parseFloat(form.value.latitude);
+  const lng = parseFloat(form.value.longitude);
   
-  if (!lat || !lng) {
-    ElMessage.warning('Primero obtén una ubicación para guardar');
+  if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+    ElMessage.warning('Primero selecciona una ubicación en el mapa');
     return;
   }
   
-  const locationName = prompt('Nombre para esta ubicación (ej: Casa, Trabajo, Plaza Central):');
-  if (!locationName) return;
+  if (!mapInstance) {
+    ElMessage.warning('El mapa no está disponible');
+    return;
+  }
   
-  const newLocation = {
-    name: locationName,
-    address: address || `${lat}, ${lng}`,
-    lat: lat,
-    lng: lng,
-    timestamp: new Date().toISOString()
-  };
-  
-  savedLocations.value.push(newLocation);
-  
-  // Guardar en localStorage
-  localStorage.setItem('savedLocations', JSON.stringify(savedLocations.value));
-  
-  ElMessage.success(`Ubicación "${locationName}" guardada`);
-}
-
-// Seleccionar ubicación guardada
-function selectSavedLocation(location: any) {
-  form.value.latitude = location.lat;
-  form.value.longitude = location.lng;
-  form.value.exactAddress = location.address;
-  
-  updateMapFromCoordinates();
-  savedLocationsVisible.value = false;
-  
-  ElMessage.success(`Ubicación "${location.name}" seleccionada`);
-}
-
-// Eliminar ubicación guardada
-function deleteSavedLocation(index: number) {
-  const location = savedLocations.value[index];
-  ElMessageBox.confirm(
-    `¿Estás seguro de que quieres eliminar "${location.name}"?`,
-    'Eliminar ubicación',
-    {
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
-      type: 'warning',
-    }
-  ).then(() => {
-    savedLocations.value.splice(index, 1);
-    localStorage.setItem('savedLocations', JSON.stringify(savedLocations.value));
-    ElMessage.success('Ubicación eliminada');
-  }).catch(() => {
-    // Usuario canceló
+  // Centrar el mapa en la ubicación seleccionada
+  mapInstance.setView([lat, lng], OSM_CONFIG.DEFAULT_ZOOM, {
+    animate: true,
+    duration: 1
   });
-}
-
-// Formatear fecha
-function formatDate(timestamp: string): string {
-  const date = new Date(timestamp);
-  return date.toLocaleString('es-ES', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  
+  // Asegurar que el marcador esté visible
+  if (mapMarker) {
+    mapMarker.openPopup();
+  }
+  
+  ElMessage.success('Mapa centrado en la ubicación seleccionada');
 }
 
 function submitForm() {
-  formRef.value.validate((valid: boolean) => {
+  formRef.value.validate(async (valid: boolean) => {
     if (valid) {
-      emit('add-incident', { ...form.value });
-      ElMessage.success('Incidente registrado');
-      
-      // Limpiar el formulario
-      Object.keys(form.value).forEach(key => form.value[key] = '');
-      
-          // Limpiar marcadores
-    referenceMarkers.forEach(marker => marker.setMap(null));
-    escapeRouteMarkers.forEach(marker => marker.setMap(null));
-    referenceMarkers = [];
-    escapeRouteMarkers = [];
-      
-      // Resetear marcador principal
-      if (map && marker) {
-        const defaultLocation = { lat: 19.4326, lng: -99.1332 };
-        map.setCenter(defaultLocation);
-        marker.setPosition(defaultLocation);
+      try {
+        // Mostrar loading
+        ElMessage.info('Enviando incidente al servidor...');
+        
+        // Preparar datos para el backend
+        const incidentData = {
+          type: form.value.type,
+          otherType: form.value.otherType || undefined,
+          briefDescription: form.value.briefDescription,
+          name: form.value.name,
+          phone: form.value.phone,
+          personType: form.value.personType,
+          date: form.value.date,
+          time: form.value.time,
+          latitude: form.value.latitude || undefined,
+          longitude: form.value.longitude || undefined,
+          calle: form.value.calle || undefined,
+          numero: form.value.numero || undefined,
+          colonia: form.value.colonia || undefined,
+          codigo_postal: form.value.codigo_postal || undefined,
+          ciudad: form.value.ciudad || undefined,
+          pais: form.value.pais || undefined,
+          referencias: form.value.referencias || undefined,
+          operatorName: operatorName.value,
+          operatorRole: operatorRole.value,
+          operatorId: (currentUser.value as any).userId || 'unknown',
+          submittedAt: new Date().toISOString()
+        };
+        
+        // Enviar al backend
+        const response = await incidentsStore.createIncident(incidentData);
+        
+        if (response.success) {
+          ElMessage.success(response.message || 'Incidente registrado exitosamente en el servidor');
+          
+          // Limpiar el formulario
+          Object.keys(form.value).forEach(key => {
+            (form.value as any)[key] = '';
+          });
+          
+          // Resetear mapa a ubicación por defecto
+          const defaultLocation = OSM_CONFIG.DEFAULT_LOCATION;
+          setMarkerPosition(defaultLocation.lat, defaultLocation.lng);
+        } else {
+          // Manejar errores del servidor
+          let errorMessage = response.message || 'Error al registrar el incidente';
+          
+          // Si hay errores específicos de validación
+          if (response.errors && Object.keys(response.errors).length > 0) {
+            errorMessage = Object.values(response.errors)
+              .flat()
+              .join('\n');
+          }
+          
+          ElMessage.error(errorMessage);
+        }
+      } catch (error: any) {
+        console.error('Error submitting incident:', error);
+        
+        // Fallback: guardar localmente si falla el servidor
+        const fallbackData = {
+          ...form.value,
+          operatorName: operatorName.value,
+          operatorRole: operatorRole.value,
+          operatorId: (currentUser.value as any).userId || 'unknown',
+          submittedAt: new Date().toISOString()
+        };
+        
+        emit('add-incident', fallbackData);
+        
+        ElMessage.warning('No se pudo conectar al servidor. El incidente se guardó localmente.');
+        
+        // Limpiar el formulario
+        Object.keys(form.value).forEach(key => {
+          (form.value as any)[key] = '';
+        });
+        
+        // Resetear mapa a ubicación por defecto
+        const defaultLocation = OSM_CONFIG.DEFAULT_LOCATION;
+        setMarkerPosition(defaultLocation.lat, defaultLocation.lng);
       }
     }
   });
 }
 
+// Función para establecer la posición del marcador
+function setMarkerPosition(lat: number, lng: number) {
+  updateFormCoordinates(lat, lng);
+  updateMapView(lat, lng);
+}
+
 onMounted(() => {
   try {
     initMap();
-    
-    // Cargar ubicaciones guardadas
-    const saved = localStorage.getItem('savedLocations');
-    if (saved) {
-      savedLocations.value = JSON.parse(saved);
-    }
   } catch (error) {
     console.error('Error en onMounted:', error);
-    showAlternativeMap();
+    ElMessage.error('Error al inicializar el mapa');
   }
 });
 
 onUnmounted(() => {
-  if (map) {
-    map = null;
+  // Limpiar recursos del mapa
+  if (mapInstance) {
+    mapInstance.remove();
+    mapInstance = null;
+  }
+  if (mapMarker) {
+    mapMarker = null;
   }
 });
 </script>
@@ -1077,6 +1128,80 @@ onUnmounted(() => {
 .neon-form {
   margin-top: 0;
 }
+
+/* Estilos para la información del operador */
+.operator-info-section {
+  margin-bottom: 24px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-radius: 16px;
+  border: 2px solid #0ea5e9;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);
+}
+
+.operator-tags {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.operator-tag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid #0ea5e9;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.1);
+  min-width: 200px;
+  justify-content: flex-start;
+}
+
+.tag-icon {
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
+  border-radius: 50%;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.tag-label {
+  font-weight: 700;
+  color: #0369a1;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+}
+
+.tag-value {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 1rem;
+  flex: 1;
+  text-align: left;
+}
+
+@media (max-width: 768px) {
+  .operator-tags {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .operator-tag {
+    min-width: unset;
+    width: 100%;
+  }
+  
+  .operator-info-section {
+    padding: 12px 16px;
+  }
+}
+
 .form-section {
   margin-bottom: 32px;
   padding-bottom: 18px;
@@ -1171,6 +1296,47 @@ onUnmounted(() => {
   gap: 8px;
 }
 
+/* Estilos para las instrucciones del mapa */
+.map-instructions {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+  border-radius: 12px;
+  border: 1px solid #0ea5e9;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.instruction-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #0369a1;
+  font-weight: 600;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.instruction-icon {
+  font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+  .map-instructions {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .instruction-item {
+    justify-content: center;
+  }
+}
+
 /* Estilos para la barra de búsqueda del mapa */
 .map-search-container {
   display: flex;
@@ -1257,19 +1423,126 @@ onUnmounted(() => {
 .map-container {
   position: relative;
 }
-.google-map {
-  width: 100%;
-  height: 300px;
+
+/* Controles flotantes del mapa */
+.map-floating-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+}
+
+.floating-control-btn {
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  font-size: 16px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.floating-control-btn:hover {
+  transform: translateY(-2px) scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.center-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-color: rgba(255, 255, 255, 0.9);
+  color: white;
+}
+
+.center-btn:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+  color: white;
+}
+
+.reload-btn {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  border-color: rgba(255, 255, 255, 0.9);
+  color: white;
+}
+
+.reload-btn:hover {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+  color: white;
+}
+.osm-map {
+  width: 100% !important;
+  height: 500px !important;
   border-radius: 12px;
   border: 2px solid #96BBBB;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
   margin-bottom: 12px;
-  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  background: #f8f9fa;
+  z-index: 1;
 }
-.google-map.expanded {
-  height: 500px;
-  transform: scale(1.02);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+
+/* Estilos específicos para Leaflet */
+.osm-map .leaflet-container {
+  height: 100% !important;
+  width: 100% !important;
+  border-radius: 10px;
+  font-family: 'Arial', sans-serif;
+  background: #f8f9fa !important;
+}
+
+.osm-map .leaflet-tile-pane {
+  filter: none !important;
+}
+
+.osm-map .leaflet-tile {
+  filter: none !important;
+}
+
+.osm-map .leaflet-popup-content-wrapper {
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.osm-map .leaflet-popup-content {
+  margin: 12px 16px;
+  line-height: 1.4;
+}
+
+.osm-map .leaflet-control-zoom {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.osm-map .leaflet-control-zoom a {
+  border-radius: 0;
+  font-weight: bold;
+  font-size: 18px;
+  transition: all 0.2s ease;
+  background: white !important;
+  color: #333 !important;
+}
+
+.osm-map .leaflet-control-zoom a:hover {
+  background: #6366f1 !important;
+  color: white !important;
+}
+
+/* Asegurar que las tiles se carguen correctamente */
+.osm-map .leaflet-tile-container {
+  filter: none !important;
+}
+
+.osm-map .leaflet-layer {
+  filter: none !important;
 }
 .map-controls {
   display: flex;
@@ -1334,54 +1607,8 @@ onUnmounted(() => {
   background: linear-gradient(135deg, #764ba2 0%, #667eea 50%, #764ba2 100%);
 }
 
-.saved-locations-btn {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #f093fb 100%);
-  color: white;
-}
 
-.saved-locations-btn:hover {
-  background: linear-gradient(135deg, #f5576c 0%, #f093fb 50%, #f5576c 100%);
-}
 
-.update-map-btn {
-  border-radius: 12px;
-  font-weight: 700;
-  padding: 12px 24px;
-  font-size: 0.95rem;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 15px rgba(190, 91, 80, 0.3);
-  border: none;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  background: linear-gradient(135deg, #BE5B50 0%, #d67c72 50%, #BE5B50 100%);
-  color: white;
-  position: relative;
-  overflow: hidden;
-}
-
-.update-map-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  transition: left 0.5s;
-}
-
-.update-map-btn:hover::before {
-  left: 100%;
-}
-
-.update-map-btn:hover {
-  background: linear-gradient(135deg, #d67c72 0%, #BE5B50 50%, #d67c72 100%);
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 8px 25px rgba(190, 91, 80, 0.4);
-}
 .map-info {
   display: flex;
   flex-direction: column;
@@ -1449,244 +1676,132 @@ onUnmounted(() => {
   box-shadow: 0 0 0 2px #6366f133;
 }
 
-/* Estilos para el modal de ubicaciones guardadas */
-.saved-locations-modal .el-dialog {
-  border-radius: 16px;
-  overflow: hidden;
-}
-
-.saved-locations-modal .el-dialog__header {
-  background: linear-gradient(90deg, #0A97B0 0%, #6366f1 100%);
-  color: white;
+/* Estilos para campos de ubicación detallada */
+.detailed-location-section {
+  margin-top: 24px;
   padding: 20px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-radius: 16px;
+  border: 2px solid #0ea5e9;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);
 }
 
-.saved-locations-modal .el-dialog__title {
-  color: white;
+.location-fields-title {
+  color: #0369a1;
+  font-size: 1.1rem;
   font-weight: 700;
-}
-
-.saved-locations-content {
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.empty-locations {
-  padding: 40px 20px;
   text-align: center;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
-.locations-list {
+.location-fields-grid {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
-.location-item {
+.location-row {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border-radius: 16px;
-  border: 2px solid #e2e8f0;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  gap: 16px;
+  width: 100%;
 }
 
-.location-item:hover {
-  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
-  border-color: #6366f1;
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.2);
-}
-
-.location-info {
+.location-field {
   flex: 1;
+  margin-bottom: 0;
 }
 
-.location-name {
-  font-weight: 700;
-  color: #1e293b;
-  font-size: 1.1rem;
-  margin-bottom: 6px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.location-field-full {
+  flex: 1;
+  width: 100%;
+  margin-bottom: 0;
 }
 
-.location-name i {
-  color: #6366f1;
-  font-size: 1rem;
+.location-field .el-input__wrapper,
+.location-field-full .el-input__wrapper {
+  background: #96BBBB !important;
+  border-radius: 10px !important;
+  border: 1.5px solid #b6c2e1 !important;
+  transition: all 0.3s ease;
 }
 
-.location-address {
-  color: #6366f1;
-  font-size: 0.95rem;
-  margin-bottom: 4px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 500;
-}
-
-.location-address i {
-  color: #8b5cf6;
-  font-size: 0.9rem;
-}
-
-.location-coords {
-  color: #64748b;
-  font-size: 0.85rem;
-  font-family: 'Courier New', monospace;
-  margin-bottom: 4px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: #f1f5f9;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-weight: 600;
-}
-
-.location-coords i {
-  color: #10b981;
-  font-size: 0.8rem;
+.location-field .el-input__wrapper:focus-within,
+.location-field-full .el-input__wrapper:focus-within {
+  border-color: #0ea5e9 !important;
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.3);
+  transform: translateY(-1px);
 }
 
 .location-actions {
   display: flex;
-  gap: 10px;
-}
-
-.action-btn {
-  border-radius: 8px;
-  font-weight: 600;
-  padding: 8px 16px;
-  font-size: 0.85rem;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  border: none;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.action-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.use-btn {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-}
-
-.use-btn:hover {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
-}
-
-.delete-btn {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  color: white;
-}
-
-.delete-btn:hover {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-}
-
-.dialog-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 24px;
-  border-top: 2px solid #e2e8f0;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-}
-
-.close-btn {
-  border-radius: 8px;
-  font-weight: 600;
-  padding: 10px 20px;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  border: 2px solid #e2e8f0;
-  background: white;
-  color: #64748b;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.close-btn:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.save-btn {
-  border-radius: 8px;
-  font-weight: 600;
-  padding: 10px 20px;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  border: none;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  color: white;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.save-btn:hover {
-  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-}
-
-/* Estilos para botón Ver más ubicaciones */
-.show-more-container {
-  display: flex;
   justify-content: center;
   margin-top: 16px;
-  padding: 12px;
+  padding-top: 16px;
+  border-top: 1px solid #cbd5e1;
 }
 
-.show-more-btn {
+.clear-location-btn {
   border-radius: 10px;
   font-weight: 600;
-  padding: 10px 20px;
+  padding: 8px 16px;
   font-size: 0.9rem;
-  background: linear-gradient(90deg, #6366f1 0%, #60a5fa 100%);
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%);
   border: none;
   color: white;
-  box-shadow: 0 3px 10px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 2px 6px rgba(100, 116, 139, 0.3);
   transition: all 0.3s ease;
-}
-
-.show-more-btn:hover {
-  background: linear-gradient(90deg, #60a5fa 0%, #6366f1 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
-}
-
-/* Estilos para fecha de ubicación */
-.location-date {
-  color: #94a3b8;
-  font-size: 0.8rem;
-  font-style: italic;
-  margin-top: 4px;
   display: flex;
   align-items: center;
   gap: 6px;
-  font-weight: 500;
 }
 
-.location-date i {
-  color: #f59e0b;
-  font-size: 0.75rem;
+.clear-location-btn:hover {
+  background: linear-gradient(135deg, #475569 0%, #334155 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(100, 116, 139, 0.4);
+}
+
+/* Responsive para campos de ubicación */
+@media (max-width: 768px) {
+  .location-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .location-field,
+  .location-field-full {
+    width: 100%;
+  }
+  
+  .detailed-location-section {
+    padding: 16px;
+  }
+}
+
+/* Estilos para la descripción del incidente */
+.incident-description {
+  margin-top: 20px;
+  padding: 16px;
+  background: linear-gradient(135deg, #fff7ed 0%, #fef3c7 100%);
+  border-radius: 12px;
+  border: 2px solid #f59e0b;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.15);
+}
+
+.description-title {
+  color: #92400e;
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .submit-btn {
@@ -1785,15 +1900,22 @@ onUnmounted(() => {
     max-width: 100%;
     padding: 10px 8px 8px 8px;
   }
-  .google-map {
-    height: 250px;
-  }
-  .google-map.expanded {
-    height: 400px;
+  .osm-map {
+    height: 350px !important;
   }
   .map-controls {
     flex-direction: column;
     align-items: center;
+  }
+  .map-floating-controls {
+    top: 8px;
+    right: 8px;
+    gap: 6px;
+  }
+  .floating-control-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
   }
   .map-stats {
     flex-direction: column;

@@ -68,56 +68,14 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import IncidentForm from './IncidentForm.vue';
-import { Edit as IepEdit, Delete as IepDelete, Warning as IepWarning } from '@element-plus/icons-vue';
 import { storeToRefs } from 'pinia';
-import { useIncidentsStore } from '@/stores/incidents';
-
-interface Incident {
-  type: string;
-  date: string;
-  time: string;
-  lugar: string;
-  name: string;
-  phone: string;
-  personType: string;
-  exactAddress: string;
-  description: string;
-  officerObservations: string;
-  officerConclusions: string;
-  latitude?: string;
-  longitude?: string;
-  referencePoints?: string;
-  escapeRoutes?: string;
-  securityCameras?: string;
-}
+import { useIncidentsStore } from '#/store';
 
 const incidentsStore = useIncidentsStore();
 const { incidents } = storeToRefs(incidentsStore);
 const showAllIncidents = ref(false);
 
-function addIncident(incident: any) {
-  incidentsStore.addIncident({
-    type: incident.type,
-    date: incident.date,
-    time: incident.time,
-    lugar: incident.lugar,
-    name: incident.name,
-    phone: incident.phone,
-    personType: incident.personType,
-    exactAddress: incident.exactAddress,
-    description: incident.description,
-    officerObservations: incident.officerObservations,
-    officerConclusions: incident.officerConclusions,
-    latitude: incident.latitude,
-    longitude: incident.longitude,
-    referencePoints: incident.referencePoints,
-    escapeRoutes: incident.escapeRoutes,
-    securityCameras: incident.securityCameras,
-  });
-}
-
-function editIncident(index: number) {
+function editIncident(_index: number) {
   ElMessageBox.alert('Funcionalidad de edición próximamente.', 'Editar incidente', {
     confirmButtonText: 'OK',
   });
