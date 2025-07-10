@@ -15,7 +15,7 @@ import { defineStore } from 'pinia';
 
 import { getUserInfoApi, loginApi, logoutApi, registerUserApi } from '#/api';
 import { $t } from '#/locales';
-import { persistencePlugin } from '#/stores/plugins/persistence';
+import { persistencePlugin } from '#/store/plugins/persistence';
 //import { ca } from 'element-plus/es/locales.mjs';
 //import { to } from '@vben/utils';
 

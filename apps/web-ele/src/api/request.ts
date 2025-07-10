@@ -17,6 +17,19 @@ import { ElMessage } from 'element-plus'; // Para mostrar mensajes de error
 // import { useAuthStore } from '#/store'; // Temporalmente comentado
 import { $t } from '#/locales'; // Función para traducción (i18n)
 
+/**
+ * Función para obtener el token CSRF de las cookies
+ */
+function getCsrfToken(): string {
+  const name = 'csrftoken';
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) {
+    return parts.pop()?.split(';').shift() || '';
+  }
+  return '';
+}
+
 
 
 // Obtiene la URL base del API desde la configuración de la aplicación
@@ -29,7 +42,7 @@ const API_BASE_URL = 'http://localhost:8000/';
  * Función para crear una instancia personalizada de RequestClient
  */
 
-function createRequestClient(baseURL: string, options?: RequestClientOptions) {
+function createRequestClient(_baseURL: string, options?: RequestClientOptions) {
   const client = new RequestClient({
     ...options,
     baseURL: API_BASE_URL, // Usar la URL base del API
@@ -87,6 +100,16 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
       // Logout también debe enviar cookies
       if (config.url?.includes('/auth/logout/')) {
         config.withCredentials = true;
+      }
+
+      // Asegurar que las rutas de incidentes envíen credenciales
+      if (config.url?.includes('/incidents/')) {
+        config.withCredentials = true;
+        // Agregar header adicional para autenticación
+        const csrfToken = getCsrfToken();
+        if (csrfToken) {
+          config.headers['X-CSRFToken'] = csrfToken;
+        }
       }
 
       return config;

@@ -4,15 +4,21 @@
       <h1>🚔 Sistema de Gestión de Incidentes</h1>
       <p>Panel de control para el registro y seguimiento de incidentes</p>
     </div>
-    
     <div class="dashboard-content">
-      <IncidentTable />
+      <IncidentForm @add-incident="handleAddIncident" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import IncidentTable from '../_core/incident/IncidentTable.vue'
+import IncidentForm from '../_core/incident/IncidentForm.vue'
+import { useIncidentsStore, type Incident } from '#/store';
+
+const incidentsStore = useIncidentsStore();
+
+function handleAddIncident(incident: Incident) {
+  incidentsStore.addIncident(incident);
+}
 </script>
 
 <style scoped>

@@ -6,7 +6,7 @@
         <span>Gestión de Incidentes</span>
       </div>
     </template>
-    <IncidentForm @add-incident="addIncident" />
+    <!-- Quitar <IncidentForm /> -->
     <el-divider />
     
     <el-table
@@ -58,62 +58,24 @@
       </el-button>
     </div>
     
-    <div v-else class="empty-message">
+    <!-- Quitar mensaje de tabla vacía -->
+    <!-- <div v-else class="empty-message">
       <el-empty description="No hay incidentes registrados." />
-    </div>
+    </div> -->
   </el-card>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import IncidentForm from './IncidentForm.vue';
-import { Edit as IepEdit, Delete as IepDelete, Warning as IepWarning } from '@element-plus/icons-vue';
+import { storeToRefs } from 'pinia';
+import { useIncidentsStore } from '#/store';
 
-interface Incident {
-  type: string;
-  date: string;
-  time: string;
-  lugar: string;
-  name: string;
-  phone: string;
-  personType: string;
-  exactAddress: string;
-  description: string;
-  officerObservations: string;
-  officerConclusions: string;
-  latitude?: string;
-  longitude?: string;
-  referencePoints?: string;
-  escapeRoutes?: string;
-  securityCameras?: string;
-}
-
-const incidents = ref<Incident[]>([]);
+const incidentsStore = useIncidentsStore();
+const { incidents } = storeToRefs(incidentsStore);
 const showAllIncidents = ref(false);
 
-function addIncident(incident: any) {
-  incidents.value.push({
-    type: incident.type,
-    date: incident.date,
-    time: incident.time,
-    lugar: incident.lugar,
-    name: incident.name,
-    phone: incident.phone,
-    personType: incident.personType,
-    exactAddress: incident.exactAddress,
-    description: incident.description,
-    officerObservations: incident.officerObservations,
-    officerConclusions: incident.officerConclusions,
-    latitude: incident.latitude,
-    longitude: incident.longitude,
-    referencePoints: incident.referencePoints,
-    escapeRoutes: incident.escapeRoutes,
-    securityCameras: incident.securityCameras,
-  });
-}
-
-function editIncident(index: number) {
+function editIncident(_index: number) {
   ElMessageBox.alert('Funcionalidad de edición próximamente.', 'Editar incidente', {
     confirmButtonText: 'OK',
   });
@@ -126,7 +88,7 @@ function deleteIncident(index: number) {
     type: 'warning',
   })
     .then(() => {
-      incidents.value.splice(index, 1);
+      incidentsStore.deleteIncident(index);
       ElMessage.success('Incidente eliminado');
     })
     .catch(() => {
