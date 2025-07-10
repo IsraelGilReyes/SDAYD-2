@@ -78,7 +78,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',  # Para JWT
     'rest_framework_simplejwt.token_blacklist', # Para manejar la lista negra de tokens JWT
     'authentication',
-    'incidents',# Aplicación para manejar los incidentes
+    'incidents.apps.IncidentsConfig', # Usar el nombre correcto de la app
 ]
 
 MIDDLEWARE = [

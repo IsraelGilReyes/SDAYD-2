@@ -53,3 +53,10 @@ class IncidenteSerializer(serializers.ModelSerializer):
             'fecha_hora_registro',
         ]
         read_only_fields = ['fecha_hora_registro']
+from rest_framework import serializers
+from .models import Incidente
+
+class IncidenteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Incidente
+        fields = '__all__'
