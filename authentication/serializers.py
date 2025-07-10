@@ -74,14 +74,22 @@ class UserSerializer(serializers.ModelSerializer):
         style={'input_type': 'password'},
         validators=[validate_password]
     )
+    roles = serializers.SerializerMethodField()
     
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'is_active']
+        fields = ['id', 'username', 'email', 'password', 'first_name', 'last_name', 
+                 'is_active', 'is_staff', 'is_superuser', 'date_joined', 'last_login', 'roles']
         extra_kwargs = {
             'password': {'write_only': True},
-            'is_active': {'read_only': True}
         }
+
+    def get_roles(self, obj):
+        """
+        Obtiene los roles del usuario.
+        """
+        user_roles = obj.user_roles.filter(role__is_active=True)
+        return [ur.role.name for ur in user_roles]
 
     def create(self, validated_data):
         """
