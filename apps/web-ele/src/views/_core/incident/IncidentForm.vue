@@ -180,13 +180,23 @@
               </svg>
             </span>
             <el-form-item prop="time" class="datetime-form-item">
-              <el-time-picker
-                v-model="form.time"
-                placeholder="Hora"
-                format="HH:mm"
-                value-format="HH:mm"
-                :style="{ width: '100%' }"
-              />
+              <div class="time-picker-container">
+                <el-time-picker
+                  v-model="form.time"
+                  placeholder="Hora"
+                  format="HH:mm"
+                  value-format="HH:mm"
+                  :style="{ width: '70%' }"
+                />
+                <el-select 
+                  v-model="form.timePeriod" 
+                  placeholder="a.m./p.m."
+                  :style="{ width: '30%', marginLeft: '8px' }"
+                >
+                  <el-option label="a.m." value="AM" />
+                  <el-option label="p.m." value="PM" />
+                </el-select>
+              </div>
             </el-form-item>
           </div>
         </div>
@@ -498,6 +508,7 @@ const form = ref({
   personType: '',
   date: '',
   time: '',
+  timePeriod: 'AM', // Campo para a.m./p.m.
   lugar: '',
   latitude: '',
   longitude: '',
@@ -961,6 +972,21 @@ function submitForm() {
         // Mostrar loading
         ElMessage.info('Enviando incidente al servidor...');
         
+        // Combinar hora con período a.m./p.m.
+        let finalTime = form.value.time;
+        if (form.value.time && form.value.timePeriod) {
+          const [hours, minutes] = form.value.time.split(':');
+          let hour = parseInt(hours);
+          
+          if (form.value.timePeriod === 'PM' && hour !== 12) {
+            hour += 12;
+          } else if (form.value.timePeriod === 'AM' && hour === 12) {
+            hour = 0;
+          }
+          
+          finalTime = `${hour.toString().padStart(2, '0')}:${minutes}`;
+        }
+
         // Preparar datos para el backend
         const incidentData = {
           type: form.value.type,
@@ -970,7 +996,8 @@ function submitForm() {
           phone: form.value.phone,
           personType: form.value.personType,
           date: form.value.date,
-          time: form.value.time,
+          time: finalTime,
+          timePeriod: form.value.timePeriod,
           latitude: form.value.latitude || undefined,
           longitude: form.value.longitude || undefined,
           calle: form.value.calle || undefined,
@@ -1878,6 +1905,12 @@ onUnmounted(() => {
 .datetime-form-item {
   width: 100%;
   margin-bottom: 0;
+}
+
+.time-picker-container {
+  display: flex;
+  align-items: center;
+  width: 100%;
 }
 @media (max-width: 700px) {
   .glass-card {
