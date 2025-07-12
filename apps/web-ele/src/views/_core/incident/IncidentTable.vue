@@ -34,7 +34,11 @@
       size="small"
     >
       <el-table-column prop="id" label="ID único" width="110" />
-      <el-table-column prop="type" label="Tipo de incidente" width="150" />
+      <el-table-column label="Tipo de incidente" width="150">
+        <template #default="scope">
+          {{ scope.row.type === 'Otro' && scope.row.otherType ? scope.row.otherType : scope.row.type }}
+        </template>
+      </el-table-column>
       <el-table-column prop="briefDescription" label="Descripción" width="200" />
       <el-table-column prop="date" label="Fecha" width="120" />
       <el-table-column label="Hora" width="100">
