@@ -43,7 +43,7 @@
       <el-table-column prop="date" label="Fecha" width="120" />
       <el-table-column label="Hora" width="100">
         <template #default="scope">
-          {{ formatTime(scope.row.time) }}
+          {{ formatTime(scope.row.time, scope.row.timePeriod) }}
         </template>
       </el-table-column>
       <el-table-column prop="name" label="Nombre" width="150" />
@@ -272,13 +272,21 @@ const paginatedIncidents = computed(() => {
   return filteredIncidents.value.slice(start, start + pageSize);
 });
 
-function formatTime(time: string) {
+function formatTime(time: string, timePeriod?: string) {
   if (!time) return '';
   const [hours, minutes] = time.split(':');
-  const hour = parseInt(hours);
-  const ampm = hour >= 12 ? 'p.m.' : 'a.m.';
-  const displayHour = hour % 12 || 12;
-  return `${displayHour}:${minutes} ${ampm}`;
+  let hour = parseInt(hours);
+  let ampm = '';
+  if (timePeriod) {
+    ampm = timePeriod === 'AM' ? 'a.m.' : 'p.m.';
+    // Mostrar la hora en formato 12h si es necesario
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minutes} ${ampm}`;
+  } else {
+    ampm = hour >= 12 ? 'p.m.' : 'a.m.';
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minutes} ${ampm}`;
+  }
 }
 
 function goToPage(page: number) {
