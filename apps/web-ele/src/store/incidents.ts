@@ -3,21 +3,25 @@ import { createIncidentApi, type IncidentApi } from '#/api';
 
 export interface Incident {
   type: string;
-  date: string;
-  time: string;
-  lugar: string;
+  otherType?: string;
+  briefDescription: string;
   name: string;
   phone: string;
   personType: string;
-  exactAddress: string;
-  description: string;
-  officerObservations: string;
-  officerConclusions: string;
-  latitude?: string;
-  longitude?: string;
-  referencePoints?: string;
-  escapeRoutes?: string;
-  securityCameras?: string;
+  priority: string;
+  date: string;
+  time: string;
+  calle?: string;
+  numero?: string;
+  colonia?: string;
+  codigo_postal?: string;
+  ciudad?: string;
+  pais?: string;
+  referencias?: string;
+  operatorName?: string;
+  operatorRole?: string;
+  operatorId?: string;
+  submittedAt?: string;
 }
 
 export const useIncidentsStore = defineStore('incidents', {
@@ -34,18 +38,28 @@ export const useIncidentsStore = defineStore('incidents', {
         
         // Si la creación es exitosa, también agregar al store local
         if (response.success && response.incident) {
+          const incident = response.incident as any; // Usar any para acceder a campos dinámicos
           this.incidents.push({
-            type: response.incident.type,
-            date: response.incident.date,
-            time: response.incident.time,
-            lugar: '', // El backend no devuelve este campo
-            name: response.incident.name,
-            phone: response.incident.phone,
-            personType: response.incident.personType,
-            exactAddress: '', // El backend no devuelve este campo
-            description: response.incident.briefDescription,
-            officerObservations: '',
-            officerConclusions: '',
+            type: incident.type,
+            otherType: incident.otherType,
+            briefDescription: incident.briefDescription,
+            name: incident.name,
+            phone: incident.phone,
+            personType: incident.personType,
+            priority: incident.priority || 'media',
+            date: incident.date,
+            time: incident.time,
+            calle: incident.calle,
+            numero: incident.numero,
+            colonia: incident.colonia,
+            codigo_postal: incident.codigo_postal,
+            ciudad: incident.ciudad,
+            pais: incident.pais,
+            referencias: incident.referencias,
+            operatorName: incident.operatorName,
+            operatorRole: incident.operatorRole,
+            operatorId: incident.operatorId,
+            submittedAt: incident.submittedAt,
           });
         }
         

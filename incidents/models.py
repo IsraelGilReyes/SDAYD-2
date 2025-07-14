@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 # Modelo: Rol
 class Rol(models.Model):
@@ -7,20 +8,20 @@ class Rol(models.Model):
         ('user','User'),
     ]
     id_rol = models.AutoField(primary_key=True)
-    rol = models.CharField(max_length=50, unique=True)
+    rol = models.CharField(max_length=50, unique=True, default='user')
 
     def __str__(self):
         return self.rol
 
-# Modelo: Usuario
-class Usuario(models.Model):
-    id_usuario = models.AutoField(primary_key=True)
-    usuario = models.CharField(max_length=100, unique=True)
-    rol = models.ForeignKey(Rol, on_delete=models.SET_NULL, null=True)
-    email = models.EmailField(unique=True)
+# Modelo: Usuario (COMENTADO - Ahora usamos django.contrib.auth.models.User)
+# class Usuario(models.Model):
+#     id_usuario = models.AutoField(primary_key=True)
+#     usuario = models.CharField(max_length=100, unique=True)
+#     rol = models.ForeignKey(Rol, on_delete=models.SET_NULL, null=True)
+#     email = models.EmailField(unique=True)
 
-    def __str__(self):
-        return self.usuario
+#     def __str__(self):
+#         return self.usuario
 
 # Modelo: Ciudadano
 class Ciudadano(models.Model):
@@ -35,7 +36,8 @@ class Ciudadano(models.Model):
     no_telefono = models.CharField(max_length=20, blank=True, null=True)
     tipo_persona = models.CharField(
         max_length=10, 
-        choices=TIPO_PERSONA_CHOICES
+        choices=TIPO_PERSONA_CHOICES,
+        default='victima'
     )
 
     def __str__(self):
@@ -73,10 +75,10 @@ class Incidente(models.Model):
 
     id_incidente = models.AutoField(primary_key=True)
     id_ciudadano = models.ForeignKey(Ciudadano, on_delete=models.CASCADE)
-    id_usuario = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True)
-    id_tipoincidente = models.ForeignKey(TipoIncidente, on_delete=models.CASCADE)
+    id_usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    id_tipoincidente = models.ForeignKey(TipoIncidente, on_delete=models.CASCADE, null=True, blank=True)
     id_ubicacion = models.ForeignKey(Ubicacion, on_delete=models.CASCADE)
-    prioridad = models.CharField(max_length=10, choices=PRIORIDADES)
+    prioridad = models.CharField(max_length=10, choices=PRIORIDADES, default='media')
     descripcion = models.TextField()
     fecha_hora_registro = models.DateTimeField(auto_now_add=True)
 

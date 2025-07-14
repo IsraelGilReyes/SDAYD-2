@@ -184,18 +184,10 @@
                 <el-time-picker
                   v-model="form.time"
                   placeholder="Hora"
-                  format="HH:mm"
-                  value-format="HH:mm"
-                  :style="{ width: '70%' }"
+                  format="hh:mm A"
+                  value-format="hh:mm A"
+                  :style="{ width: '100%' }"
                 />
-                <el-select 
-                  v-model="form.timePeriod" 
-                  placeholder="a.m./p.m."
-                  :style="{ width: '30%', marginLeft: '8px' }"
-                >
-                  <el-option label="a.m." value="AM" />
-                  <el-option label="p.m." value="PM" />
-                </el-select>
               </div>
             </el-form-item>
           </div>
@@ -231,6 +223,18 @@
               <el-option label="Testigo" value="testigo" />
               <el-option label="Víctima" value="victima" />
               <el-option label="Familiar" value="familiar" />
+            </el-select>
+          </el-form-item>
+
+          <el-form-item prop="priority" class="custom-input">
+            <el-select 
+              v-model="form.priority" 
+              placeholder="Prioridad del incidente"
+              :style="{ width: '100%', background: '#96BBBB' }"
+            >
+              <el-option label="🔴 Alta" value="alta" />
+              <el-option label="🟡 Media" value="media" />
+              <el-option label="🟢 Baja" value="baja" />
             </el-select>
           </el-form-item>
         </div>
@@ -506,9 +510,9 @@ const form = ref({
   name: '',
   phone: '',
   personType: '',
+  priority: 'media', // Prioridad por defecto
   date: '',
   time: '',
-  timePeriod: 'AM', // Campo para a.m./p.m.
   lugar: '',
   latitude: '',
   longitude: '',
@@ -524,6 +528,18 @@ const form = ref({
 
 const rules = {
   type: [ { required: true, message: 'Selecciona el tipo de incidente', trigger: 'change' } ],
+  otherType: [
+    { 
+      validator: (_rule: any, value: any, callback: any) => {
+        if (form.value.type === 'Otro' && (!value || value.trim() === '')) {
+          callback(new Error('Especifica el tipo de incidente'));
+        } else {
+          callback();
+        }
+      }, 
+      trigger: 'blur' 
+    }
+  ],
   briefDescription: [ 
     { required: true, message: 'Ingresa una descripción breve del incidente', trigger: 'blur' },
     { min: 10, message: 'La descripción debe tener al menos 10 caracteres', trigger: 'blur' },
@@ -534,6 +550,7 @@ const rules = {
   name: [ { required: true, message: 'Ingresa el nombre', trigger: 'blur' } ],
   phone: [ { required: true, message: 'Ingresa el teléfono', trigger: 'blur' } ],
   personType: [ { required: true, message: 'Selecciona el tipo de persona', trigger: 'change' } ],
+  priority: [ { required: true, message: 'Selecciona la prioridad del incidente', trigger: 'change' } ],
   // Validaciones opcionales para campos de ubicación
   codigo_postal: [ 
     { pattern: /^\d{5}$/, message: 'El código postal debe tener 5 dígitos', trigger: 'blur' } 
@@ -968,38 +985,24 @@ function centerMapOnSelection() {
 function submitForm() {
   formRef.value.validate(async (valid: boolean) => {
     if (valid) {
+      // La hora ya viene en formato de 12 horas con AM/PM
+      let finalTime = form.value.time;
+
       try {
         // Mostrar loading
         ElMessage.info('Enviando incidente al servidor...');
-        
-        // Combinar hora con período a.m./p.m.
-        let finalTime = form.value.time;
-        if (form.value.time && form.value.timePeriod) {
-          const [hours, minutes] = form.value.time.split(':');
-          let hour = parseInt(hours);
-          
-          if (form.value.timePeriod === 'PM' && hour !== 12) {
-            hour += 12;
-          } else if (form.value.timePeriod === 'AM' && hour === 12) {
-            hour = 0;
-          }
-          
-          finalTime = `${hour.toString().padStart(2, '0')}:${minutes}`;
-        }
 
         // Preparar datos para el backend
         const incidentData = {
-          type: form.value.type,
-          otherType: form.value.otherType || undefined,
+          type: form.value.type === 'Otro' ? form.value.otherType : form.value.type,
+          otherType: form.value.type === 'Otro' ? form.value.otherType : undefined,
           briefDescription: form.value.briefDescription,
           name: form.value.name,
           phone: form.value.phone,
           personType: form.value.personType,
+          priority: form.value.priority,
           date: form.value.date,
           time: finalTime,
-          timePeriod: form.value.timePeriod,
-          latitude: form.value.latitude || undefined,
-          longitude: form.value.longitude || undefined,
           calle: form.value.calle || undefined,
           numero: form.value.numero || undefined,
           colonia: form.value.colonia || undefined,
@@ -1045,7 +1048,22 @@ function submitForm() {
         
         // Fallback: guardar localmente si falla el servidor
         const fallbackData = {
-          ...form.value,
+          type: form.value.type === 'Otro' ? form.value.otherType : form.value.type,
+          otherType: form.value.type === 'Otro' ? form.value.otherType : undefined,
+          briefDescription: form.value.briefDescription,
+          name: form.value.name,
+          phone: form.value.phone,
+          personType: form.value.personType,
+          priority: form.value.priority,
+          date: form.value.date,
+          time: finalTime,
+          calle: form.value.calle || undefined,
+          numero: form.value.numero || undefined,
+          colonia: form.value.colonia || undefined,
+          codigo_postal: form.value.codigo_postal || undefined,
+          ciudad: form.value.ciudad || undefined,
+          pais: form.value.pais || undefined,
+          referencias: form.value.referencias || undefined,
           operatorName: operatorName.value,
           operatorRole: operatorRole.value,
           operatorId: (currentUser.value as any).userId || 'unknown',

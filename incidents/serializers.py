@@ -1,62 +1,238 @@
 from rest_framework import serializers
-from .models import Rol, Usuario, Ciudadano, TipoIncidente, Ubicacion, Incidente
+from .models import Incidente, Ciudadano, TipoIncidente, Ubicacion
+from django.contrib.auth.models import User
+from django.utils import timezone
+from datetime import datetime
+import logging
 
-class RolSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Rol
-        fields = '__all__'
+logger = logging.getLogger(__name__)
 
-class UsuarioSerializer(serializers.ModelSerializer):
-    rol_nombre = serializers.ReadOnlyField(source='rol.rol')
+class CreateIncidentSerializer(serializers.Serializer):
+    """
+    Serializer para crear incidentes desde el frontend.
+    Recibe los datos del formulario y los valida.
+    """
+    # Campos obligatorios
+    type = serializers.CharField(max_length=100, help_text="Tipo de incidente")
+    briefDescription = serializers.CharField(max_length=500, help_text="Descripción breve del incidente")
+    name = serializers.CharField(max_length=100, help_text="Nombre de la persona que reporta")
+    phone = serializers.CharField(max_length=20, help_text="Teléfono de contacto")
+    personType = serializers.ChoiceField(
+        choices=[
+            ('testigo', 'Testigo'),
+            ('victima', 'Víctima'),
+            ('familiar', 'Familiar'),
+        ],
+        help_text="Tipo de persona que reporta"
+    )
+    date = serializers.DateField(help_text="Fecha del incidente")
+    time = serializers.CharField(max_length=20, help_text="Hora del incidente (formato 12 horas con AM/PM)")
+    priority = serializers.ChoiceField(
+        choices=[
+            ('alta', 'Alta'),
+            ('media', 'Media'),
+            ('baja', 'Baja'),
+        ],
+        default='media',
+        help_text="Prioridad del incidente"
+    )
+    
+    # Campos opcionales
+    otherType = serializers.CharField(max_length=100, required=False, allow_blank=True, help_text="Tipo personalizado de incidente")
+    calle = serializers.CharField(max_length=100, required=False, allow_blank=True, help_text="Calle")
+    numero = serializers.CharField(max_length=10, required=False, allow_blank=True, help_text="Número")
+    colonia = serializers.CharField(max_length=100, required=False, allow_blank=True, help_text="Colonia")
+    codigo_postal = serializers.CharField(max_length=10, required=False, allow_blank=True, help_text="Código postal")
+    ciudad = serializers.CharField(max_length=100, required=False, allow_blank=True, help_text="Ciudad")
+    pais = serializers.CharField(max_length=100, required=False, allow_blank=True, help_text="País")
+    referencias = serializers.CharField(max_length=200, required=False, allow_blank=True, help_text="Referencias de ubicación")
+    
+    # Campos del operador
+    operatorName = serializers.CharField(max_length=100, required=False, allow_blank=True, help_text="Nombre del operador")
+    operatorRole = serializers.CharField(max_length=50, required=False, allow_blank=True, help_text="Rol del operador")
+    operatorId = serializers.CharField(max_length=50, required=False, allow_blank=True, help_text="ID del operador")
+    submittedAt = serializers.DateTimeField(required=False, help_text="Timestamp de envío")
 
-    class Meta:
-        model = Usuario
-        fields = ['id_usuario', 'usuario', 'rol', 'rol_nombre', 'email']
-        read_only_fields = ['rol_nombre']
+    def validate_type(self, value):
+        """Validar que cuando se selecciona 'Otro', se proporcione otherType"""
+        if value == 'Otro':
+            other_type = self.initial_data.get('otherType')
+            if not other_type or other_type.strip() == '':
+                raise serializers.ValidationError("Debe especificar el tipo de incidente cuando selecciona 'Otro'")
+        return value.strip() if value else value
 
-class CiudadanoSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Ciudadano
-        fields = '__all__'
+    def validate_phone(self, value):
+        """Validar formato básico del teléfono"""
+        import re
+        # Remover espacios y caracteres especiales
+        phone_clean = re.sub(r'[^\d]', '', value)
+        
+        if len(phone_clean) < 10:
+            raise serializers.ValidationError("El teléfono debe tener al menos 10 dígitos")
+        
+        if len(phone_clean) > 15:
+            raise serializers.ValidationError("El teléfono no puede tener más de 15 dígitos")
+        
+        return value
 
-class TipoIncidenteSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TipoIncidente
-        fields = '__all__'
+    def validate_codigo_postal(self, value):
+        """Validar formato del código postal si se proporciona"""
+        if value and value.strip():
+            if not value.strip().isdigit():
+                raise serializers.ValidationError("El código postal debe contener solo números")
+            if len(value.strip()) not in [4, 5]:
+                raise serializers.ValidationError("El código postal debe tener 4 o 5 dígitos")
+        return value
 
-class UbicacionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Ubicacion
-        fields = '__all__'
+    def validate(self, data):
+        """Validaciones adicionales a nivel de objeto"""
+        # Si se selecciona 'Otro', usar otherType como tipo principal
+        if data.get('type') == 'Otro':
+            if not data.get('otherType') or not data.get('otherType').strip():
+                raise serializers.ValidationError("Debe especificar el tipo de incidente cuando selecciona 'Otro'")
+            data['type'] = data['otherType'].strip()
+        
+        # Validar que la fecha no sea futura
+        if data.get('date'):
+            from datetime import date
+            if data['date'] > date.today():
+                raise serializers.ValidationError("La fecha del incidente no puede ser futura")
+        
+        return data
+
+    def _get_or_create_ciudadano(self, validated_data):
+        """Método auxiliar para obtener o crear ciudadano"""
+        try:
+            ciudadano = Ciudadano.objects.get(
+                nombre=validated_data['name'],
+                no_telefono=validated_data['phone']
+            )
+            logger.info(f"Ciudadano encontrado: {ciudadano}")
+            return ciudadano
+        except Ciudadano.DoesNotExist:
+            ciudadano = Ciudadano(
+                nombre=validated_data['name'],
+                no_telefono=validated_data['phone'],
+                tipo_persona=validated_data['personType']
+            )
+            ciudadano.save()
+            logger.info(f"Ciudadano creado: {ciudadano}")
+            return ciudadano
+
+    def _get_or_create_tipo_incidente(self, tipo_nombre):
+        """Método auxiliar para obtener o crear tipo de incidente"""
+        try:
+            tipo_incidente = TipoIncidente.objects.get(nombre=tipo_nombre)
+            logger.info(f"Tipo de incidente encontrado: {tipo_incidente}")
+            return tipo_incidente
+        except TipoIncidente.DoesNotExist:
+            tipo_incidente = TipoIncidente(nombre=tipo_nombre)
+            tipo_incidente.save()
+            logger.info(f"Tipo de incidente creado: {tipo_incidente}")
+            return tipo_incidente
+
+    def _create_ubicacion(self, validated_data):
+        """Método auxiliar para crear ubicación"""
+        ubicacion_data = {
+            'calle': validated_data.get('calle', '') or 'Sin especificar',
+            'numero': validated_data.get('numero', '') or '',
+            'colonia': validated_data.get('colonia', '') or '',
+            'ciudad': validated_data.get('ciudad', '') or 'Sin especificar',
+            'pais': validated_data.get('pais', '') or 'Sin especificar',
+            'referencias': validated_data.get('referencias', '') or ''
+        }
+        
+        # Manejar código postal
+        codigo_postal = validated_data.get('codigo_postal', '')
+        if codigo_postal and codigo_postal.strip() and codigo_postal.strip().isdigit():
+            ubicacion_data['codigo_postal'] = int(codigo_postal.strip())
+        else:
+            ubicacion_data['codigo_postal'] = None
+        
+        ubicacion = Ubicacion(**ubicacion_data)
+        ubicacion.save()
+        logger.info(f"Ubicación creada: {ubicacion}")
+        return ubicacion
+
+    def create(self, validated_data):
+        """Crear un nuevo incidente en la base de datos"""
+        try:
+            logger.info(f"Creando incidente con datos: {validated_data}")
+            
+            # 1. Crear o obtener el ciudadano
+            ciudadano = self._get_or_create_ciudadano(validated_data)
+            
+            # 2. Crear o obtener el tipo de incidente
+            tipo_incidente = self._get_or_create_tipo_incidente(validated_data['type'])
+            
+            # 3. Crear la ubicación
+            ubicacion = self._create_ubicacion(validated_data)
+
+            # 4. Obtener el usuario operador (si existe)
+            usuario = None
+            if validated_data.get('operatorId'):
+                try:
+                    usuario = User.objects.get(id=validated_data['operatorId'])
+                    logger.info(f"Usuario operador encontrado: {usuario}")
+                except User.DoesNotExist:
+                    logger.warning(f"Usuario operador no encontrado: {validated_data['operatorId']}")
+
+            # 5. Crear el incidente
+            incidente = Incidente(
+                id_ciudadano=ciudadano,
+                id_usuario=usuario,
+                id_tipoincidente=tipo_incidente,
+                id_ubicacion=ubicacion,
+                prioridad=validated_data.get('priority', 'media'),
+                descripcion=validated_data['briefDescription']
+            )
+            
+            incidente.save()
+            logger.info(f"Incidente creado exitosamente: {incidente}")
+            return incidente
+
+        except Exception as e:
+            logger.error(f"Error en create(): {str(e)}")
+            logger.error(f"Tipo de error: {type(e).__name__}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            raise serializers.ValidationError(f"Error al crear el incidente: {str(e)}")
+
+    def to_representation(self, instance):
+        """Personalizar la representación del incidente creado"""
+        return {
+            'id': instance.id_incidente,
+            'type': instance.id_tipoincidente.nombre if instance.id_tipoincidente else None,
+            'description': instance.descripcion,
+            'citizen': {
+                'name': instance.id_ciudadano.nombre,
+                'phone': instance.id_ciudadano.no_telefono,
+                'type': instance.id_ciudadano.tipo_persona
+            },
+            'priority': instance.prioridad,
+            'location': {
+                'street': instance.id_ubicacion.calle,
+                'number': instance.id_ubicacion.numero,
+                'neighborhood': instance.id_ubicacion.colonia,
+                'city': instance.id_ubicacion.ciudad,
+                'country': instance.id_ubicacion.pais,
+                'postalCode': instance.id_ubicacion.codigo_postal,
+                'references': instance.id_ubicacion.referencias
+            },
+            'operator': {
+                'name': instance.id_usuario.username if instance.id_usuario else None,
+                'role': 'admin' if instance.id_usuario and instance.id_usuario.is_staff else 'user' if instance.id_usuario else None
+            },
+            'createdAt': instance.fecha_hora_registro.isoformat(),
+            'status': 'created'
+        }
 
 class IncidenteSerializer(serializers.ModelSerializer):
-    id_ciudadano = CiudadanoSerializer(read_only=True)
-    id_usuario = UsuarioSerializer(read_only=True)
-    id_tipoincidente = TipoIncidenteSerializer(read_only=True)
-    id_ubicacion = UbicacionSerializer(read_only=True)
-
-    ciudadano_id = serializers.PrimaryKeyRelatedField(queryset=Ciudadano.objects.all(), source='id_ciudadano', write_only=True)
-    usuario_id = serializers.PrimaryKeyRelatedField(queryset=Usuario.objects.all(), source='id_usuario', write_only=True, allow_null=True)
-    tipoincidente_id = serializers.PrimaryKeyRelatedField(queryset=TipoIncidente.objects.all(), source='id_tipoincidente', write_only=True)
-    ubicacion_id = serializers.PrimaryKeyRelatedField(queryset=Ubicacion.objects.all(), source='id_ubicacion', write_only=True)
-
+    """Serializer simple para mostrar incidentes"""
+    ciudadano_nombre = serializers.CharField(source='id_ciudadano.nombre', read_only=True)
+    tipo_incidente = serializers.CharField(source='id_tipoincidente.nombre', read_only=True)
+    ubicacion = serializers.CharField(source='id_ubicacion.calle', read_only=True)
+    
     class Meta:
         model = Incidente
-        fields = [
-            'id_incidente',
-            'id_ciudadano', 'ciudadano_id',
-            'id_usuario', 'usuario_id',
-            'id_tipoincidente', 'tipoincidente_id',
-            'id_ubicacion', 'ubicacion_id',
-            'prioridad',
-            'descripcion',
-            'fecha_hora_registro',
-        ]
-        read_only_fields = ['fecha_hora_registro']
-from rest_framework import serializers
-from .models import Incidente
-
-class IncidenteSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Incidente
-        fields = '__all__'
+        fields = ['id_incidente', 'ciudadano_nombre', 'tipo_incidente', 'ubicacion', 'prioridad', 'descripcion', 'fecha_hora_registro']

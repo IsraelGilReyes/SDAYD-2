@@ -1,10 +1,13 @@
-
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Incidente
-from .serializers import IncidenteSerializer
+from .serializers import CreateIncidentSerializer, IncidenteSerializer
 from rest_framework.permissions import IsAuthenticated
+import logging
+
+# Configurar logging para ver errores detallados
+logger = logging.getLogger(__name__)
 
 # todos los incidentes (GET)
 @api_view(['GET'])
@@ -19,11 +22,59 @@ def get_incidentes(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_incidente(request):
-    serializer = IncidenteSerializer(data=request.data)
+    logger.info(f"Datos recibidos: {request.data}")
+    
+    serializer = CreateIncidentSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            logger.info("Datos validados correctamente, creando incidente...")
+            incidente = serializer.save()
+            logger.info(f"Incidente creado exitosamente con ID: {incidente.id_incidente}")
+            
+            # Respuesta que coincide con el tipo TypeScript del frontend
+            response_data = {
+                'success': True,
+                'message': 'Incidente creado exitosamente',
+                'incident': {
+                    'id': incidente.id_incidente,
+                    'type': incidente.id_tipoincidente.nombre if incidente.id_tipoincidente else 'Sin tipo',
+                    'briefDescription': incidente.descripcion,
+                    'name': incidente.id_ciudadano.nombre,
+                    'phone': incidente.id_ciudadano.no_telefono,
+                    'personType': incidente.id_ciudadano.tipo_persona,
+                    'priority': incidente.prioridad,
+                    'date': incidente.fecha_hora_registro.date().isoformat(),
+                    'time': incidente.fecha_hora_registro.time().strftime('%I:%M %p'),
+                    'operatorName': incidente.id_usuario.username if incidente.id_usuario else 'Sin operador',
+                    'operatorRole': 'admin' if incidente.id_usuario and incidente.id_usuario.is_staff else 'user' if incidente.id_usuario else 'Sin rol',
+                    'submittedAt': incidente.fecha_hora_registro.isoformat()
+                }
+            }
+            
+            logger.info(f"Enviando respuesta exitosa: {response_data}")
+            return Response(response_data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            logger.error(f"Error al crear el incidente: {str(e)}")
+            logger.error(f"Tipo de error: {type(e).__name__}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            
+            error_response = {
+                'success': False,
+                'message': f'Error interno del servidor: {str(e)}',
+                'errors': {'general': [str(e)]}
+            }
+            logger.error(f"Enviando respuesta de error: {error_response}")
+            return Response(error_response, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        logger.warning(f"Error de validación: {serializer.errors}")
+        error_response = {
+            'success': False,
+            'message': 'Error de validación en los datos enviados',
+            'errors': serializer.errors
+        }
+        logger.warning(f"Enviando respuesta de validación: {error_response}")
+        return Response(error_response, status=status.HTTP_400_BAD_REQUEST)
 
 
 # Actualizar (PUT)

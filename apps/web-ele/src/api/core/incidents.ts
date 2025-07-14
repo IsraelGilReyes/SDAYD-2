@@ -14,8 +14,6 @@ export namespace IncidentApi {
     personType: string;
     date: string;
     time: string;
-    latitude?: string;
-    longitude?: string;
     calle?: string;
     numero?: string;
     colonia?: string;
@@ -55,7 +53,8 @@ export namespace IncidentApi {
  * Envía una solicitud POST al endpoint '/incidents/create/'.
  */
 export async function createIncidentApi(incidentData: IncidentApi.CreateIncidentParams): Promise<IncidentApi.CreateIncidentResult> {
-  return baseRequestClient.post('/incidents/create/', incidentData);
+  const response = await baseRequestClient.post('/incidents/create/', incidentData);
+  return response.data || response; // Extrae data si existe, sino usa la respuesta directa
 }
 
 /**

@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .models import Role, UserRole, Permission, RolePermission, Menu
+from .models import Role, UserRole
 from rest_framework import exceptions  # Importación faltante
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
@@ -113,16 +113,6 @@ class RoleSerializer(serializers.ModelSerializer):
         read_only_fields = ['created_at', 'updated_at']
 
 
-class PermissionSerializer(serializers.ModelSerializer):
-    """
-    Serializador para el modelo Permission.
-    """
-    class Meta:
-        model = Permission
-        fields = ['id', 'name', 'codename', 'description', 'created_at']
-        read_only_fields = ['created_at']
-
-
 class UserRoleSerializer(serializers.ModelSerializer):
     """
     Serializador para la relación User-Role.
@@ -148,61 +138,6 @@ class UserRoleSerializer(serializers.ModelSerializer):
         model = UserRole
         fields = ['id', 'user', 'user_id', 'role', 'role_id', 'assigned_at', 'assigned_by']
         read_only_fields = ['assigned_at', 'assigned_by']
-
-
-class RolePermissionSerializer(serializers.ModelSerializer):
-    """
-    Serializador para la relación Role-Permission.
-    """
-    permission = PermissionSerializer(read_only=True)
-    permission_id = serializers.PrimaryKeyRelatedField(
-        queryset=Permission.objects.all(),
-        source='permission',
-        write_only=True
-    )
-    
-    role = RoleSerializer(read_only=True)
-    role_id = serializers.PrimaryKeyRelatedField(
-        queryset=Role.objects.filter(is_active=True),
-        source='role',
-        write_only=True
-    )
-
-    class Meta:
-        model = RolePermission
-        fields = ['id', 'role', 'role_id', 'permission', 'permission_id', 'assigned_at']
-        read_only_fields = ['assigned_at']
-
-
-class MenuSerializer(serializers.ModelSerializer):
-    """
-    Serializador para el modelo Menu.
-    Incluye serialización recursiva para submenús.
-    """
-    children = serializers.SerializerMethodField()
-    roles = RoleSerializer(many=True, read_only=True)
-    role_ids = serializers.PrimaryKeyRelatedField(
-        queryset=Role.objects.filter(is_active=True),
-        source='roles',
-        many=True,
-        write_only=True
-    )
-
-    class Meta:
-        model = Menu
-        fields = [
-            'id', 'name', 'path', 'component', 'parent', 'icon', 
-            'sort_order', 'is_active', 'roles', 'role_ids', 'children',
-            'created_at', 'updated_at'
-        ]
-        read_only_fields = ['created_at', 'updated_at']
-
-    def get_children(self, obj):
-        """
-        Método para obtener recursivamente los submenús.
-        """
-        children = obj.children.all().order_by('sort_order')
-        return MenuSerializer(children, many=True).data
 
 
 class UserInfoSerializer(serializers.ModelSerializer):
