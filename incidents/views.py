@@ -28,7 +28,10 @@ def create_incidente(request):
     if serializer.is_valid():
         try:
             logger.info("Datos validados correctamente, creando incidente...")
-            incidente = serializer.save()
+            # PASO CLAVE: Asignar el usuario autenticado como operador
+            incidente = serializer.save(operatorId=None)  # No usar operatorId del frontend
+            incidente.id_usuario = request.user
+            incidente.save()
             logger.info(f"Incidente creado exitosamente con ID: {incidente.id_incidente}")
             
             # Respuesta que coincide con el tipo TypeScript del frontend

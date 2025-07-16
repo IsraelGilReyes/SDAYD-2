@@ -168,19 +168,19 @@ class CreateIncidentSerializer(serializers.Serializer):
             # 3. Crear la ubicación
             ubicacion = self._create_ubicacion(validated_data)
 
-            # 4. Obtener el usuario operador (si existe)
+            # 4. El usuario operador será asignado en la vista, no aquí
             usuario = None
-            if validated_data.get('operatorId'):
-                try:
-                    usuario = User.objects.get(id=validated_data['operatorId'])
-                    logger.info(f"Usuario operador encontrado: {usuario}")
-                except User.DoesNotExist:
-                    logger.warning(f"Usuario operador no encontrado: {validated_data['operatorId']}")
+            # if validated_data.get('operatorId'):
+            #     try:
+            #         usuario = User.objects.get(id=validated_data['operatorId'])
+            #         logger.info(f"Usuario operador encontrado: {usuario}")
+            #     except User.DoesNotExist:
+            #         logger.warning(f"Usuario operador no encontrado: {validated_data['operatorId']}")
 
             # 5. Crear el incidente
             incidente = Incidente(
                 id_ciudadano=ciudadano,
-                id_usuario=usuario,
+                id_usuario=usuario,  # Será sobreescrito en la vista
                 id_tipoincidente=tipo_incidente,
                 id_ubicacion=ubicacion,
                 prioridad=validated_data.get('priority', 'media'),
@@ -237,10 +237,29 @@ class IncidenteSerializer(serializers.ModelSerializer):
     ciudad = serializers.CharField(source='id_ubicacion.ciudad', read_only=True)
     pais = serializers.CharField(source='id_ubicacion.pais', read_only=True)
     referencias = serializers.CharField(source='id_ubicacion.referencias', read_only=True)
+    # NUEVOS CAMPOS:
+    no_telefono = serializers.CharField(source='id_ciudadano.no_telefono', read_only=True)
+    tipo_persona = serializers.CharField(source='id_ciudadano.tipo_persona', read_only=True)
+    operador_nombre = serializers.CharField(source='id_usuario.username', read_only=True)
+    operador_rol = serializers.SerializerMethodField()
+
+    def get_operador_rol(self, obj):
+        if obj.id_usuario:
+            if hasattr(obj.id_usuario, 'rol'):
+                return obj.id_usuario.rol
+            elif obj.id_usuario.is_superuser:
+                return 'admin'
+            elif obj.id_usuario.is_staff:
+                return 'admin'
+            else:
+                return 'user'
+        return None
 
     class Meta:
         model = Incidente
         fields = [
             'id_incidente', 'ciudadano_nombre', 'tipo_incidente', 'calle', 'numero', 'colonia',
-            'codigo_postal', 'ciudad', 'pais', 'referencias', 'prioridad', 'descripcion', 'fecha_hora_registro'
+            'codigo_postal', 'ciudad', 'pais', 'referencias', 'prioridad', 'descripcion', 'fecha_hora_registro',
+            # Agrega los nuevos campos aquí:
+            'no_telefono', 'tipo_persona', 'operador_nombre', 'operador_rol'
         ]

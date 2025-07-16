@@ -57,9 +57,9 @@ export const useIncidentsStore = defineStore('incidents', {
             ciudad: incident.ciudad,
             pais: incident.pais,
             referencias: incident.referencias,
-            operatorName: incident.operatorName,
-            operatorRole: incident.operatorRole,
-            operatorId: incident.operatorId,
+            operatorName: incident.operador_nombre || '',
+            operatorRole: incident.operador_rol || '',
+            operatorId: incident.operatorId || '',
             submittedAt: incident.submittedAt,
           });
         }
@@ -102,13 +102,10 @@ export const useIncidentsStore = defineStore('incidents', {
             priority: incident.prioridad,
             briefDescription: incident.descripcion,
             date: incident.fecha_hora_registro,
-            // Otros campos opcionales
-            phone: incident.phone || '',
-            personType: incident.personType || '',
-            time: incident.time || '',
-            otherType: incident.otherType || '',
-            operatorName: incident.operatorName || '',
-            operatorRole: incident.operatorRole || '',
+            phone: incident.no_telefono || '',
+            personType: incident.tipo_persona || '',
+            operatorName: incident.operador_nombre || '',
+            operatorRole: incident.operador_rol || '',
             operatorId: incident.operatorId || '',
             submittedAt: incident.submittedAt || '',
           }));
