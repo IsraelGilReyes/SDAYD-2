@@ -62,7 +62,7 @@ export async function createIncidentApi(incidentData: IncidentApi.CreateIncident
  * Envía una solicitud GET al endpoint '/incidents/'.
  */
 export async function getIncidentsApi() {
-  return baseRequestClient.get('/incidents/');
+  return baseRequestClient.get('/incidents/url/');
 }
 
 /**

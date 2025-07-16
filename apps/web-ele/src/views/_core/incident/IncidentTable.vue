@@ -2,26 +2,39 @@
   <el-card class="incident-card">
     <template #header>
       <div class="incident-card-header">
-        <el-icon style="margin-right: 8px;"><i-ep-warning /></el-icon>
+        <el-icon style="margin-right: 8px;"><Warning /></el-icon>
         <span>Gestión de Incidentes</span>
       </div>
     </template>
-    <!-- Barra de búsqueda mejorada con SVG -->
-    <div class="search-bar">
-      <div class="search-input-wrapper">
-        <span class="search-svg-icon">
-          <!-- SVG lupa profesional -->
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="11" cy="11" r="7" stroke="#6366f1" stroke-width="2.2" fill="#C0C9EE" filter="drop-shadow(0 1px 4px #898AC4AA)"/>
-            <rect x="16.2" y="16.2" width="4.5" height="2.2" rx="1.1" transform="rotate(45 16.2 16.2)" fill="#898AC4" filter="drop-shadow(0 1px 4px #898AC4AA)"/>
-          </svg>
-        </span>
-        <el-input 
-          v-model="searchQuery" 
-          placeholder="Buscar en la tabla de incidentes..." 
-          clearable
-          class="custom-search-input"
-        />
+    <!-- Barra de búsqueda y paginación en la parte superior -->
+    <div class="search-bar-with-pagination">
+      <div class="search-bar">
+        <div class="search-input-wrapper">
+          <span class="search-svg-icon">
+            <!-- SVG lupa profesional -->
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="11" cy="11" r="7" stroke="#6366f1" stroke-width="2.2" fill="#C0C9EE" filter="drop-shadow(0 1px 4px #898AC4AA)"/>
+              <rect x="16.2" y="16.2" width="4.5" height="2.2" rx="1.1" transform="rotate(45 16.2 16.2)" fill="#898AC4" filter="drop-shadow(0 1px 4px #898AC4AA)"/>
+            </svg>
+          </span>
+          <el-input 
+            v-model="searchQuery" 
+            placeholder="Buscar en la tabla de incidentes..." 
+            clearable
+            class="custom-search-input"
+          />
+        </div>
+      </div>
+      <div v-if="totalPages > 1" class="pagination-container pagination-top">
+        <el-button 
+          v-for="page in totalPages"
+          :key="page"
+          :type="page === currentPage ? 'primary' : 'default'"
+          class="pagination-btn"
+          @click="goToPage(page)"
+        >
+          Página {{ page }}
+        </el-button>
       </div>
     </div>
     <el-divider />
@@ -33,19 +46,25 @@
       class="incident-table custom-bg-table"
       size="small"
     >
-      <el-table-column prop="id" label="ID único" width="110" />
+      <el-table-column prop="id" label="ID único" width="80" />
       <el-table-column label="Tipo de incidente" width="150">
         <template #default="scope">
           {{ scope.row.type === 'Otro' && scope.row.otherType ? scope.row.otherType : scope.row.type }}
         </template>
       </el-table-column>
-      <el-table-column prop="briefDescription" label="Descripción" width="200" />
-      <el-table-column prop="date" label="Fecha" width="120" />
-      <el-table-column label="Hora" width="100">
+      <el-table-column prop="priority" label="Prioridad" width="100">
         <template #default="scope">
-          {{ formatTime(scope.row.time, scope.row.timePeriod) }}
+          <span v-if="scope.row.priority === 'alta'" style="color: #e53e3e; font-weight: bold;">🔴 Alta</span>
+          <span v-else-if="scope.row.priority === 'media'" style="color: #f6ad55; font-weight: bold;">🟡 Media</span>
+          <span v-else-if="scope.row.priority === 'baja'" style="color: #38a169; font-weight: bold;">🟢 Baja</span>
+          <span v-else>{{ scope.row.priority }}</span>
         </template>
       </el-table-column>
+      <el-table-column prop="briefDescription" label="Descripción" width="200" />
+      <el-table-column prop="dateOnly" label="Fecha" width="120" />
+      <el-table-column prop="time" label="Hora" width="100" />
+      <el-table-column prop="operatorName" label="Operador" width="140" />
+      <el-table-column prop="operatorRole" label="Rol" width="120" />
       <el-table-column prop="name" label="Nombre" width="150" />
       <el-table-column prop="phone" label="Teléfono" width="120" />
       <el-table-column prop="personType" label="Tipo" width="100" />
@@ -60,18 +79,18 @@
         <template #default="scope">
           <div class="action-buttons">
             <el-button size="small" type="primary" @click="editIncident(scope.row)">
-              <el-icon><i-ep-edit /></el-icon> <span class="btn-label">Editar</span>
+              <el-icon><Edit /></el-icon> <span class="btn-label">Editar</span>
             </el-button>
             <el-button size="small" type="danger" @click="deleteIncident(scope.$index)">
-              <el-icon><i-ep-delete /></el-icon> <span class="btn-label">Eliminar</span>
+              <el-icon><Delete /></el-icon> <span class="btn-label">Eliminar</span>
             </el-button>
           </div>
         </template>
       </el-table-column>
     </el-table>
-    <!-- Paginación tipo Excel -->
-    <div v-if="totalPages > 1" class="pagination-container">
-      <el-button
+    <!-- Paginación tipo Excel (ya no va aquí abajo) -->
+    <!-- <div v-if="totalPages > 1" class="pagination-container">
+      <el-button 
         v-for="page in totalPages"
         :key="page"
         :type="page === currentPage ? 'primary' : 'default'"
@@ -80,8 +99,8 @@
       >
         Página {{ page }}
       </el-button>
-    </div>
-
+    </div> -->
+    
     <!-- Modal de edición -->
     <el-dialog v-model="editDialogVisible" title="Editar Incidente" width="80%">
       <el-form :model="editingIncident" label-width="200px">
@@ -116,11 +135,7 @@
           <el-col :span="12">
             <el-form-item label="Hora">
               <div class="time-picker-container">
-                <el-time-picker v-model="editingIncident.time" format="HH:mm" />
-                <el-select v-model="editingIncident.timePeriod" placeholder="a.m./p.m." style="width: 80px; margin-left: 8px;">
-                  <el-option label="a.m." value="AM" />
-                  <el-option label="p.m." value="PM" />
-                </el-select>
+                <el-time-picker v-model="editingIncident.time" format="hh:mm A" value-format="hh:mm A" />
               </div>
             </el-form-item>
           </el-col>
@@ -201,9 +216,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Edit as IepEdit, Delete as IepDelete, Warning as IepWarning, Search as IepSearch } from '@element-plus/icons-vue';
+import { Edit, Delete, Warning, Search } from '@element-plus/icons-vue';
 import { storeToRefs } from 'pinia';
 import { useIncidentsStore } from '@/store/incidents';
 
@@ -211,40 +226,30 @@ const incidentsStore = useIncidentsStore();
 const { incidents } = storeToRefs(incidentsStore);
 const searchQuery = ref('');
 const currentPage = ref(1);
-const pageSize = 2; // Cambiado a 2 para pruebas
+const pageSize = 40; // Cambiado a 40 por solicitud
 const editDialogVisible = ref(false);
 const editingIncident = ref({});
 
-// Asegurar que cada incidente tenga un ID único y los campos necesarios
-watch(incidents, (newVal) => {
-  newVal.forEach((incident, idx) => {
-    if (!incident.id) {
-      incident.id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${idx}`;
-    }
-    // Asegurar que todos los campos existan con los nombres correctos del formulario
-    incident.briefDescription = incident.briefDescription || incident.description || '';
-    incident.calle = incident.calle || incident.street || '';
-    incident.numero = incident.numero || incident.number || '';
-    incident.colonia = incident.colonia || '';
-    incident.codigo_postal = incident.codigo_postal || incident.postalCode || '';
-    incident.ciudad = incident.ciudad || incident.city || '';
-    incident.pais = incident.pais || incident.country || '';
-    incident.referencias = incident.referencias || incident.references || '';
-    incident.timePeriod = incident.timePeriod || 'AM';
-  });
-}, { immediate: true });
+// Computado para agregar campo 'time' a partir de 'date'
+const incidentsWithTime = computed(() =>
+  incidents.value.map(inc => ({
+    ...inc,
+    time: inc.date ? new Date(inc.date).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : '',
+    dateOnly: inc.date ? new Date(inc.date).toLocaleDateString('es-MX') : '',
+  }))
+);
 
 const filteredIncidents = computed(() => {
-  if (!searchQuery.value.trim()) return incidents.value;
+  if (!searchQuery.value.trim()) return incidentsWithTime.value;
   
   const query = searchQuery.value.toLowerCase().trim();
-  return incidents.value.filter(incident => {
+  return incidentsWithTime.value.filter(incident => {
     // Buscar en campos específicos
     const searchableFields = [
       incident.id,
       incident.type,
       incident.briefDescription,
-      incident.date,
+      incident.dateOnly,
       incident.time,
       incident.name,
       incident.phone,
@@ -257,7 +262,6 @@ const filteredIncidents = computed(() => {
       incident.pais,
       incident.referencias
     ];
-    
     // Verificar si la consulta está contenida en alguno de los campos
     return searchableFields.some(field => {
       if (field === null || field === undefined) return false;
@@ -272,23 +276,6 @@ const paginatedIncidents = computed(() => {
   return filteredIncidents.value.slice(start, start + pageSize);
 });
 
-function formatTime(time: string, timePeriod?: string) {
-  if (!time) return '';
-  const [hours, minutes] = time.split(':');
-  let hour = parseInt(hours);
-  let ampm = '';
-  if (timePeriod) {
-    ampm = timePeriod === 'AM' ? 'a.m.' : 'p.m.';
-    // Mostrar la hora en formato 12h si es necesario
-    const displayHour = hour % 12 || 12;
-    return `${displayHour}:${minutes} ${ampm}`;
-  } else {
-    ampm = hour >= 12 ? 'p.m.' : 'a.m.';
-    const displayHour = hour % 12 || 12;
-    return `${displayHour}:${minutes} ${ampm}`;
-  }
-}
-
 function goToPage(page: number) {
   currentPage.value = page;
 }
@@ -301,20 +288,6 @@ function editIncident(incident: any) {
 function saveEdit() {
   const idx = incidents.value.findIndex(i => i.id === editingIncident.value.id);
   if (idx !== -1) {
-    // Combinar hora con período a.m./p.m.
-    if (editingIncident.value.time && editingIncident.value.timePeriod) {
-      const [hours, minutes] = editingIncident.value.time.split(':');
-      let hour = parseInt(hours);
-      
-      if (editingIncident.value.timePeriod === 'PM' && hour !== 12) {
-        hour += 12;
-      } else if (editingIncident.value.timePeriod === 'AM' && hour === 12) {
-        hour = 0;
-      }
-      
-      editingIncident.value.time = `${hour.toString().padStart(2, '0')}:${minutes}`;
-    }
-    
     incidents.value[idx] = { ...editingIncident.value };
     ElMessage.success('Incidente actualizado correctamente');
     editDialogVisible.value = false;
@@ -337,6 +310,13 @@ function deleteIncident(index: number) {
       ElMessage.info('Eliminación cancelada');
     });
 }
+
+onMounted(() => {
+  console.log('onMounted ejecutado en IncidentTable.vue');
+  incidentsStore.fetchIncidents().then(() => {
+    console.log('Incidentes cargados:', incidents.value);
+  });
+});
 </script>
 
 <style scoped>
@@ -546,5 +526,18 @@ function deleteIncident(index: number) {
 .el-divider {
   border-color: #0A97B0 !important;
   background: #0A97B0 !important;
+}
+.search-bar-with-pagination {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin: 16px 0 8px 0;
+}
+.pagination-top {
+  margin: 0 0 0 16px;
+  padding: 0;
+  background: none;
+  box-shadow: none;
 }
 </style> 

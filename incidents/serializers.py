@@ -228,11 +228,19 @@ class CreateIncidentSerializer(serializers.Serializer):
         }
 
 class IncidenteSerializer(serializers.ModelSerializer):
-    """Serializer simple para mostrar incidentes"""
     ciudadano_nombre = serializers.CharField(source='id_ciudadano.nombre', read_only=True)
     tipo_incidente = serializers.CharField(source='id_tipoincidente.nombre', read_only=True)
-    ubicacion = serializers.CharField(source='id_ubicacion.calle', read_only=True)
-    
+    calle = serializers.CharField(source='id_ubicacion.calle', read_only=True)
+    numero = serializers.CharField(source='id_ubicacion.numero', read_only=True)
+    colonia = serializers.CharField(source='id_ubicacion.colonia', read_only=True)
+    codigo_postal = serializers.CharField(source='id_ubicacion.codigo_postal', read_only=True)
+    ciudad = serializers.CharField(source='id_ubicacion.ciudad', read_only=True)
+    pais = serializers.CharField(source='id_ubicacion.pais', read_only=True)
+    referencias = serializers.CharField(source='id_ubicacion.referencias', read_only=True)
+
     class Meta:
         model = Incidente
-        fields = ['id_incidente', 'ciudadano_nombre', 'tipo_incidente', 'ubicacion', 'prioridad', 'descripcion', 'fecha_hora_registro']
+        fields = [
+            'id_incidente', 'ciudadano_nombre', 'tipo_incidente', 'calle', 'numero', 'colonia',
+            'codigo_postal', 'ciudad', 'pais', 'referencias', 'prioridad', 'descripcion', 'fecha_hora_registro'
+        ]

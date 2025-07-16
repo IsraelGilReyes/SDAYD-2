@@ -142,9 +142,9 @@
                 resize="none"
                 maxlength="250"
                 show-word-limit
-                :style="{ background: '#96BBBB' }"
-              />
-            </el-form-item>
+              :style="{ background: '#96BBBB' }"
+            />
+          </el-form-item>
           </div>
         </div>
 
@@ -181,13 +181,13 @@
             </span>
             <el-form-item prop="time" class="datetime-form-item">
               <div class="time-picker-container">
-                <el-time-picker
-                  v-model="form.time"
-                  placeholder="Hora"
+              <el-time-picker
+                v-model="form.time"
+                placeholder="Hora"
                   format="hh:mm A"
                   value-format="hh:mm A"
-                  :style="{ width: '100%' }"
-                />
+                :style="{ width: '100%' }"
+              />
               </div>
             </el-form-item>
           </div>
@@ -242,7 +242,7 @@
         <!-- Sección 3 - Ubicación -->
         <div class="form-section">
           <h2 class="section-title">3. Ubicación</h2>
-          
+
           <!-- Mapa Interactivo -->
           <div class="map-section">
             <h3 class="map-title">�️ Mapa Interactivo de Ubicación - Vista Ampliada</h3>
@@ -353,66 +353,66 @@
               <!-- Primera fila -->
               <div class="location-row">
                 <el-form-item prop="calle" class="custom-input location-field">
-                  <el-input 
+                <el-input 
                     v-model="form.calle" 
                     placeholder="Calle"
-                    prefix-icon="Location"
-                    :style="{ background: '#96BBBB' }"
-                  />
-                </el-form-item>
+                  prefix-icon="Location"
+                  :style="{ background: '#96BBBB' }"
+                />
+              </el-form-item>
                 
                 <el-form-item prop="numero" class="custom-input location-field">
-                  <el-input 
+                <el-input 
                     v-model="form.numero" 
                     placeholder="Número"
                     prefix-icon="House"
-                    :style="{ background: '#96BBBB' }"
-                  />
-                </el-form-item>
-              </div>
-              
+                  :style="{ background: '#96BBBB' }"
+                />
+              </el-form-item>
+          </div>
+
               <!-- Segunda fila -->
               <div class="location-row">
                 <el-form-item prop="colonia" class="custom-input location-field">
-                  <el-input 
+            <el-input
                     v-model="form.colonia" 
                     placeholder="Colonia"
                     prefix-icon="Map"
-                    :style="{ background: '#96BBBB' }"
-                  />
-                </el-form-item>
-                
+              :style="{ background: '#96BBBB' }"
+            />
+          </el-form-item>
+
                 <el-form-item prop="codigo_postal" class="custom-input location-field">
-                  <el-input 
+            <el-input
                     v-model="form.codigo_postal" 
                     placeholder="Código Postal"
                     prefix-icon="Postcard"
-                    :style="{ background: '#96BBBB' }"
-                  />
-                </el-form-item>
+              :style="{ background: '#96BBBB' }"
+            />
+          </el-form-item>
               </div>
               
               <!-- Tercera fila -->
               <div class="location-row">
                 <el-form-item prop="ciudad" class="custom-input location-field">
-                  <el-input 
+            <el-input
                     v-model="form.ciudad" 
                     placeholder="Ciudad"
                     prefix-icon="Office"
-                    :style="{ background: '#96BBBB' }"
-                  />
-                </el-form-item>
+              :style="{ background: '#96BBBB' }"
+            />
+          </el-form-item>
                 
                 <el-form-item prop="pais" class="custom-input location-field">
-                  <el-input 
+            <el-input
                     v-model="form.pais" 
                     placeholder="País"
                     prefix-icon="Place"
-                    :style="{ background: '#96BBBB' }"
-                  />
-                </el-form-item>
-              </div>
-              
+              :style="{ background: '#96BBBB' }"
+            />
+          </el-form-item>
+        </div>
+
               <!-- Referencias (campo completo) -->
               <div class="location-row">
                 <el-form-item prop="referencias" class="custom-input location-field-full">
@@ -423,28 +423,28 @@
                     :style="{ background: '#96BBBB' }"
                   />
                 </el-form-item>
-              </div>
-              
+    </div>
+    
               <!-- Botón para limpiar campos de ubicación -->
-              <div class="location-actions">
-                <el-button 
+            <div class="location-actions">
+              <el-button 
                   type="info" 
-                  size="small" 
+                size="small" 
                   @click="clearLocationFields"
                   class="clear-location-btn"
-                >
-                  <i class="el-icon-delete"></i>
+              >
+                <i class="el-icon-delete"></i>
                   Limpiar Campos de Ubicación
-                </el-button>
+              </el-button>
               </div>
             </div>
           </div>
-
+          
 
         </div>
 
         <!-- Botón de Envío -->
-        <el-button 
+            <el-button 
           type="primary" 
           @click="submitForm" 
           class="submit-btn"
@@ -452,10 +452,10 @@
         >
           <span class="btn-content">
             📤 Enviar Reporte
-          </span>
-        </el-button>
+              </span>
+            </el-button>
       </el-form>
-    </div>
+          </div>
   </div>
 </template>
 
@@ -592,7 +592,7 @@ async function loadLeaflet() {
       };
       document.head.appendChild(script);
     });
-  } catch (error) {
+    } catch (error) {
     console.error('Error en loadLeaflet:', error);
     throw error;
   }
