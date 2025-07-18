@@ -2,7 +2,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Incidente
-from .serializers import CreateIncidentSerializer, IncidenteSerializer
+from .serializers import CreateIncidentSerializer, IncidenteSerializer, UpdateIncidentSerializer
 from rest_framework.permissions import IsAuthenticated
 import logging
 
@@ -87,12 +87,83 @@ def update_incidente(request, id_incidente):
     try:
         incidente = Incidente.objects.get(pk=id_incidente)
     except Incidente.DoesNotExist:
-        return Response({'error': 'Incidente no encontrado'}, status=status.HTTP_404_NOT_FOUND)
-    serializer = IncidenteSerializer(incidente, data=request.data, partial=True)
+        return Response({
+            'success': False,
+            'message': 'Incidente no encontrado'
+        }, status=status.HTTP_404_NOT_FOUND)
+    
+    # Mapear los campos del frontend a los del backend
+    mapped_data = {}
+    
+    # Mapear campos directos
+    if 'prioridad' in request.data:
+        mapped_data['prioridad'] = request.data['prioridad']
+    if 'descripcion' in request.data:
+        mapped_data['descripcion'] = request.data['descripcion']
+    
+    # Mapear campos del ciudadano
+    if 'ciudadano_nombre' in request.data:
+        mapped_data['ciudadano_nombre'] = request.data['ciudadano_nombre']
+    if 'no_telefono' in request.data:
+        mapped_data['no_telefono'] = request.data['no_telefono']
+    if 'tipo_persona' in request.data:
+        mapped_data['tipo_persona'] = request.data['tipo_persona']
+    
+    # Mapear tipo de incidente
+    if 'tipo_incidente' in request.data:
+        mapped_data['tipo_incidente'] = request.data['tipo_incidente']
+    
+    # Mapear campos de ubicación
+    location_fields = ['calle', 'numero', 'colonia', 'codigo_postal', 'ciudad', 'pais', 'referencias']
+    for field in location_fields:
+        if field in request.data:
+            mapped_data[field] = request.data[field]
+    
+    logger.info(f"Datos mapeados para actualización: {mapped_data}")
+    
+    serializer = UpdateIncidentSerializer(incidente, data=mapped_data, partial=True)
     if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            updated_incidente = serializer.save()
+            
+            # Respuesta exitosa
+            response_data = {
+                'success': True,
+                'message': 'Incidente actualizado correctamente',
+                'incident': {
+                    'id_incidente': updated_incidente.id_incidente,
+                    'prioridad': updated_incidente.prioridad,
+                    'descripcion': updated_incidente.descripcion,
+                    'ciudadano_nombre': updated_incidente.id_ciudadano.nombre,
+                    'no_telefono': updated_incidente.id_ciudadano.no_telefono,
+                    'tipo_persona': updated_incidente.id_ciudadano.tipo_persona,
+                    'tipo_incidente': updated_incidente.id_tipoincidente.nombre if updated_incidente.id_tipoincidente else None,
+                    'calle': updated_incidente.id_ubicacion.calle,
+                    'numero': updated_incidente.id_ubicacion.numero,
+                    'colonia': updated_incidente.id_ubicacion.colonia,
+                    'codigo_postal': updated_incidente.id_ubicacion.codigo_postal,
+                    'ciudad': updated_incidente.id_ubicacion.ciudad,
+                    'pais': updated_incidente.id_ubicacion.pais,
+                    'referencias': updated_incidente.id_ubicacion.referencias,
+                    'fecha_hora_registro': updated_incidente.fecha_hora_registro.isoformat(),
+                }
+            }
+            
+            return Response(response_data, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Error al actualizar incidente: {str(e)}")
+            return Response({
+                'success': False,
+                'message': f'Error interno del servidor: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        logger.warning(f"Errores de validación: {serializer.errors}")
+        return Response({
+            'success': False,
+            'message': 'Error de validación en los datos enviados',
+            'errors': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 
 # Eliminar (DELETE)

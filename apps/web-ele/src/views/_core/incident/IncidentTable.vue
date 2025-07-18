@@ -216,11 +216,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Edit, Delete, Warning, Search } from '@element-plus/icons-vue';
+import { Edit, Delete, Warning } from '@element-plus/icons-vue';
 import { storeToRefs } from 'pinia';
-import { useIncidentsStore } from '@/store/incidents';
+import { useIncidentsStore, type Incident } from '#/store/incidents';
 
 const incidentsStore = useIncidentsStore();
 const { incidents } = storeToRefs(incidentsStore);
@@ -228,11 +228,11 @@ const searchQuery = ref('');
 const currentPage = ref(1);
 const pageSize = 40; // Cambiado a 40 por solicitud
 const editDialogVisible = ref(false);
-const editingIncident = ref({});
+const editingIncident = ref<Incident>({} as Incident); // Tipado correcto
 
 // Computado para agregar campo 'time' a partir de 'date'
 const incidentsWithTime = computed(() =>
-  incidents.value.map(inc => ({
+  incidents.value.map((inc: Incident) => ({
     ...inc,
     time: inc.date ? new Date(inc.date).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : '',
     dateOnly: inc.date ? new Date(inc.date).toLocaleDateString('es-MX') : '',
@@ -243,7 +243,7 @@ const filteredIncidents = computed(() => {
   if (!searchQuery.value.trim()) return incidentsWithTime.value;
   
   const query = searchQuery.value.toLowerCase().trim();
-  return incidentsWithTime.value.filter(incident => {
+  return incidentsWithTime.value.filter((incident: Incident & { dateOnly: string; time: string }) => {
     // Buscar en campos específicos
     const searchableFields = [
       incident.id,
@@ -280,17 +280,49 @@ function goToPage(page: number) {
   currentPage.value = page;
 }
 
-function editIncident(incident: any) {
+function editIncident(incident: Incident) {
+  // Copia el incidente para evitar modificar el estado directamente antes de guardar
   editingIncident.value = { ...incident };
+
+  // Asegúrate de que los campos de fecha y hora estén en el formato correcto para los pickers de Element Plus
+  // Si tu `incident.date` ya es 'YYYY-MM-DD', no necesitas cambiarlo.
+  // Si `incident.time` ya es 'HH:mm', no necesitas cambiarlo.
+  // Ejemplo si `incident.date` viene como 'YYYY-MM-DD HH:mm:ss' y necesitas separar:
+  if (incident.submittedAt) { // Usa el campo original del backend si es un timestamp completo
+    const dateObj = new Date(incident.submittedAt);
+    const dateString = dateObj.toISOString().split('T')[0]; // 'YYYY-MM-DD'
+    if (dateString) {
+      editingIncident.value.date = dateString;
+    }
+    editingIncident.value.time = dateObj.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false }); // 'HH:mm'
+  } else if (incident.date && incident.time) {
+    // Si ya vienen separados, asegúrate del formato HH:mm para el time-picker
+    const timeParts = incident.time.split(':');
+    if (timeParts.length >= 2) {
+      const h = timeParts[0];
+      const m = timeParts[1];
+      if (h && m) {
+        editingIncident.value.time = `${h.padStart(2, '0')}:${m.padStart(2, '0')}`;
+      }
+    }
+  }
+
+
   editDialogVisible.value = true;
 }
 
-function saveEdit() {
-  const idx = incidents.value.findIndex(i => i.id === editingIncident.value.id);
-  if (idx !== -1) {
-    incidents.value[idx] = { ...editingIncident.value };
-    ElMessage.success('Incidente actualizado correctamente');
+async function saveEdit() {
+  if (editingIncident.value.id === undefined || editingIncident.value.id === null) {
+    ElMessage.error('Error: No se puede guardar un incidente sin ID.');
+    return;
+  }
+
+  // Llama a la acción del store para actualizar el incidente
+  const success = await incidentsStore.updateIncident(editingIncident.value);
+
+  if (success) {
     editDialogVisible.value = false;
+    // La tabla se actualizará automáticamente porque `incidents` es un `storeToRefs`
   }
 }
 
@@ -301,10 +333,13 @@ function deleteIncident(index: number) {
     type: 'warning',
   })
     .then(() => {
-      const idToDelete = paginatedIncidents.value[index].id;
-      const idx = incidents.value.findIndex(i => i.id === idToDelete);
-      if (idx !== -1) incidentsStore.deleteIncident(idx);
-      ElMessage.success('Incidente eliminado');
+      const incident = paginatedIncidents.value[index];
+      if (incident && incident.id) {
+        const idToDelete = incident.id;
+        const idx = incidents.value.findIndex((i: Incident) => i.id === idToDelete);
+        if (idx !== -1) incidentsStore.deleteIncident(idx);
+        ElMessage.success('Incidente eliminado');
+      }
     })
     .catch(() => {
       ElMessage.info('Eliminación cancelada');

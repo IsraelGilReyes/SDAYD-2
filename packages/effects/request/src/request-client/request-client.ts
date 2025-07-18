@@ -77,7 +77,8 @@ class RequestClient {
         'Content-Type': 'application/json;charset=utf-8',
       },
       responseReturn: 'raw', // Devuelve la respuesta completa por defecto
-      timeout: 10_000, // Tiempo de espera: 10 segundos
+      timeout: 60_000, // Tiempo de espera: 10 segundos
+       withCredentials: true,
     };
 
     // Mezcla la configuración por defecto con la configuración personalizada
