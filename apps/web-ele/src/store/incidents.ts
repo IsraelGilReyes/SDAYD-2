@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { createIncidentApi, getIncidentsApi, type IncidentApi } from '#/api';
+import { createIncidentApi, getIncidentsApi, deleteIncidentApi, type IncidentApi } from '#/api';
 
 export interface Incident {
   id?: number; // ID real de la base de datos
@@ -102,6 +102,7 @@ export const useIncidentsStore = defineStore('incidents', {
             priority: incident.prioridad,
             briefDescription: incident.descripcion,
             date: incident.fecha_hora_registro,
+            time: incident.fecha_hora_registro ? new Date(incident.fecha_hora_registro).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : '',
             phone: incident.no_telefono || '',
             personType: incident.tipo_persona || '',
             operatorName: incident.operador_nombre || '',
@@ -124,8 +125,20 @@ export const useIncidentsStore = defineStore('incidents', {
     clearIncidents() {
       this.incidents = [];
     },
-    deleteIncident(index: number) {
-      this.incidents.splice(index, 1);
+    async deleteIncident(id: number) {
+      try {
+        // Hacer la llamada al backend para eliminar el incidente
+        await deleteIncidentApi(id);
+        // Si es exitoso, eliminar del store local
+        const index = this.incidents.findIndex(incident => incident.id === id);
+        if (index !== -1) {
+          this.incidents.splice(index, 1);
+        }
+        return { success: true, message: 'Incidente eliminado correctamente' };
+      } catch (error) {
+        console.error('Error deleting incident:', error);
+        throw error;
+      }
     },
   },
 }); 

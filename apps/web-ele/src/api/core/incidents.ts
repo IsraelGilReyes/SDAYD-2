@@ -83,8 +83,8 @@ export async function updateIncidentApi(id: number, incidentData: Partial<Incide
 
 /**
  * Función para eliminar un incidente.
- * Envía una solicitud DELETE al endpoint '/incidents/{id}/'.
+ * Envía una solicitud DELETE al endpoint '/incidents/{id}/delete/'.
  */
 export async function deleteIncidentApi(id: number) {
-  return baseRequestClient.delete(`/incidents/${id}/`);
+  return baseRequestClient.delete(`/incidents/${id}/delete/`);
 }

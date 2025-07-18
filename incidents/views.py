@@ -101,10 +101,22 @@ def update_incidente(request, id_incidente):
 def delete_incidente(request, id_incidente):
     try:
         incidente = Incidente.objects.get(pk=id_incidente)
+        incidente.delete()
+        return Response({
+            'success': True,
+            'message': 'Incidente eliminado correctamente'
+        }, status=status.HTTP_200_OK)
     except Incidente.DoesNotExist:
-        return Response({'error': 'Incidente no encontrado'}, status=status.HTTP_404_NOT_FOUND)
-    incidente.delete()
-    return Response({'message': 'Incidente eliminado correctamente'}, status=status.HTTP_204_NO_CONTENT)
+        return Response({
+            'success': False,
+            'error': 'Incidente no encontrado'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        logger.error(f"Error al eliminar incidente: {str(e)}")
+        return Response({
+            'success': False,
+            'error': f'Error interno del servidor: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # Obtener un incidente por ID (GET)

@@ -300,11 +300,23 @@ function deleteIncident(index: number) {
     cancelButtonText: 'No',
     type: 'warning',
   })
-    .then(() => {
-      const idToDelete = paginatedIncidents.value[index].id;
-      const idx = incidents.value.findIndex(i => i.id === idToDelete);
-      if (idx !== -1) incidentsStore.deleteIncident(idx);
-      ElMessage.success('Incidente eliminado');
+    .then(async () => {
+      try {
+        const incidentToDelete = paginatedIncidents.value[index];
+        const incidentId = incidentToDelete.id;
+        
+        if (!incidentId) {
+          ElMessage.error('No se puede eliminar: ID de incidente no encontrado');
+          return;
+        }
+
+        // Llamar al store para eliminar el incidente (que hace la llamada al backend)
+        await incidentsStore.deleteIncident(incidentId);
+        ElMessage.success('Incidente eliminado correctamente');
+      } catch (error) {
+        console.error('Error al eliminar incidente:', error);
+        ElMessage.error('Error al eliminar el incidente');
+      }
     })
     .catch(() => {
       ElMessage.info('Eliminación cancelada');
