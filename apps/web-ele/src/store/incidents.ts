@@ -1,5 +1,10 @@
 import { defineStore } from 'pinia';
+<<<<<<< HEAD
 import { createIncidentApi, getIncidentsApi, deleteIncidentApi, type IncidentApi } from '#/api';
+=======
+import { createIncidentApi, getIncidentsApi, updateIncidentApi, type IncidentApi } from '#/api'; // Importa las nuevas funciones
+import { ElMessage } from 'element-plus'; // Para mostrar mensajes de éxito/error
+>>>>>>> 0a132632943373060a9a5854e7d55c6c1dffe1b8
 
 export interface Incident {
   id?: number; // ID real de la base de datos
@@ -119,12 +124,57 @@ export const useIncidentsStore = defineStore('incidents', {
         console.error('Error fetching incidents:', error);
       }
     },
-    setIncidents(incidents: Incident[]) {
-      this.incidents = incidents;
+
+    // --- NUEVA ACCIÓN: updateIncident ---
+    async updateIncident(updatedIncident: Incident): Promise<boolean> {
+      if (updatedIncident.id === undefined || updatedIncident.id === null) {
+        console.error('Error: ID de incidente no definido para actualizar.');
+        ElMessage.error('Error: ID de incidente no definido para actualizar.');
+        return false;
+      }
+
+      try {
+        // Mapear los campos del frontend a los que espera el backend
+        const dataToSendToApi = {
+          prioridad: updatedIncident.priority,
+          descripcion: updatedIncident.briefDescription,
+          ciudadano_nombre: updatedIncident.name,
+          no_telefono: updatedIncident.phone,
+          tipo_persona: updatedIncident.personType,
+          tipo_incidente: updatedIncident.type,
+          calle: updatedIncident.calle,
+          numero: updatedIncident.numero,
+          colonia: updatedIncident.colonia,
+          codigo_postal: updatedIncident.codigo_postal,
+          ciudad: updatedIncident.ciudad,
+          pais: updatedIncident.pais,
+          referencias: updatedIncident.referencias,
+        };
+
+        console.log('Datos a enviar al backend:', dataToSendToApi);
+
+        const response = await updateIncidentApi(updatedIncident.id, dataToSendToApi);
+
+        if (response.success) {
+          // Si la actualización en la API fue exitosa, actualiza el estado local de Pinia
+          const index = this.incidents.findIndex(inc => inc.id === updatedIncident.id);
+          if (index !== -1) {
+            // Reemplaza el incidente completo en el store para asegurar reactividad
+            this.incidents[index] = { ...updatedIncident };
+          }
+          ElMessage.success('Incidente actualizado correctamente.');
+          return true;
+        } else {
+          ElMessage.error(`Error al actualizar incidente: ${response.message || 'Desconocido'}`);
+          return false;
+        }
+      } catch (error: any) {
+        console.error('Error updating incident:', error);
+        ElMessage.error(`Error al guardar el incidente: ${error.message || 'Desconocido'}`);
+        return false;
+      }
     },
-    clearIncidents() {
-      this.incidents = [];
-    },
+<<<<<<< HEAD
     async deleteIncident(id: number) {
       try {
         // Hacer la llamada al backend para eliminar el incidente
@@ -139,6 +189,11 @@ export const useIncidentsStore = defineStore('incidents', {
         console.error('Error deleting incident:', error);
         throw error;
       }
+=======
+
+    deleteIncident(index: number) {
+      this.incidents.splice(index, 1);
+>>>>>>> 0a132632943373060a9a5854e7d55c6c1dffe1b8
     },
   },
 }); 

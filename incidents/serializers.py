@@ -227,6 +227,103 @@ class CreateIncidentSerializer(serializers.Serializer):
             'status': 'created'
         }
 
+class UpdateIncidentSerializer(serializers.ModelSerializer):
+    """
+    Serializer para actualizar incidentes.
+    Permite actualizar campos específicos del incidente.
+    """
+    # Campos que se pueden actualizar directamente
+    prioridad = serializers.ChoiceField(
+        choices=[
+            ('alta', 'Alta'),
+            ('media', 'Media'),
+            ('baja', 'Baja'),
+        ],
+        required=False
+    )
+    descripcion = serializers.CharField(max_length=500, required=False)
+    
+    # Campos relacionados con ciudadano
+    ciudadano_nombre = serializers.CharField(required=False)
+    no_telefono = serializers.CharField(max_length=20, required=False)
+    tipo_persona = serializers.ChoiceField(
+        choices=[
+            ('testigo', 'Testigo'),
+            ('victima', 'Víctima'),
+            ('familiar', 'Familiar'),
+        ],
+        required=False
+    )
+    
+    # Campos relacionados con tipo de incidente
+    tipo_incidente = serializers.CharField(required=False)
+    
+    # Campos relacionados con ubicación
+    calle = serializers.CharField(max_length=200, required=False)
+    numero = serializers.CharField(max_length=10, required=False, allow_blank=True)
+    colonia = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    codigo_postal = serializers.CharField(max_length=10, required=False, allow_blank=True)
+    ciudad = serializers.CharField(max_length=100, required=False)
+    pais = serializers.CharField(max_length=100, required=False)
+    referencias = serializers.CharField(max_length=200, required=False, allow_blank=True)
+    
+    class Meta:
+        model = Incidente
+        fields = [
+            'prioridad', 'descripcion', 'ciudadano_nombre', 'no_telefono', 'tipo_persona',
+            'tipo_incidente', 'calle', 'numero', 'colonia', 'codigo_postal', 'ciudad', 'pais', 'referencias'
+        ]
+
+    def update(self, instance, validated_data):
+        """Actualizar incidente con datos validados"""
+        try:
+            # Actualizar campos directos del incidente
+            instance.prioridad = validated_data.get('prioridad', instance.prioridad)
+            instance.descripcion = validated_data.get('descripcion', instance.descripcion)
+            
+            # Actualizar campos del ciudadano
+            if any(field in validated_data for field in ['ciudadano_nombre', 'no_telefono', 'tipo_persona']):
+                ciudadano = instance.id_ciudadano
+                ciudadano.nombre = validated_data.get('ciudadano_nombre', ciudadano.nombre)
+                ciudadano.no_telefono = validated_data.get('no_telefono', ciudadano.no_telefono)
+                ciudadano.tipo_persona = validated_data.get('tipo_persona', ciudadano.tipo_persona)
+                ciudadano.save()
+            
+            # Actualizar tipo de incidente
+            if 'tipo_incidente' in validated_data:
+                tipo_nombre = validated_data['tipo_incidente']
+                try:
+                    tipo_incidente = TipoIncidente.objects.get(nombre=tipo_nombre)
+                except TipoIncidente.DoesNotExist:
+                    tipo_incidente = TipoIncidente.objects.create(nombre=tipo_nombre)
+                instance.id_tipoincidente = tipo_incidente
+            
+            # Actualizar campos de ubicación
+            if any(field in validated_data for field in ['calle', 'numero', 'colonia', 'codigo_postal', 'ciudad', 'pais', 'referencias']):
+                ubicacion = instance.id_ubicacion
+                ubicacion.calle = validated_data.get('calle', ubicacion.calle)
+                ubicacion.numero = validated_data.get('numero', ubicacion.numero)
+                ubicacion.colonia = validated_data.get('colonia', ubicacion.colonia)
+                ubicacion.ciudad = validated_data.get('ciudad', ubicacion.ciudad)
+                ubicacion.pais = validated_data.get('pais', ubicacion.pais)
+                ubicacion.referencias = validated_data.get('referencias', ubicacion.referencias)
+                
+                # Manejar código postal
+                codigo_postal = validated_data.get('codigo_postal')
+                if codigo_postal and codigo_postal.strip() and codigo_postal.strip().isdigit():
+                    ubicacion.codigo_postal = int(codigo_postal.strip())
+                elif codigo_postal == '':
+                    ubicacion.codigo_postal = None
+                    
+                ubicacion.save()
+            
+            instance.save()
+            return instance
+            
+        except Exception as e:
+            logger.error(f"Error actualizando incidente: {str(e)}")
+            raise serializers.ValidationError(f"Error al actualizar incidente: {str(e)}")
+
 class IncidenteSerializer(serializers.ModelSerializer):
     ciudadano_nombre = serializers.CharField(source='id_ciudadano.nombre', read_only=True)
     tipo_incidente = serializers.CharField(source='id_tipoincidente.nombre', read_only=True)

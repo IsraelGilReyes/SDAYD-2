@@ -46,8 +46,60 @@ export namespace IncidentApi {
     };
     errors?: Recordable<string[]>;
   }
+
+  /** Parámetros para actualizar un incidente */
+  export interface UpdateIncidentParams {
+    prioridad?: string;
+    descripcion?: string;
+    ciudadano_nombre?: string;
+    no_telefono?: string;
+    tipo_persona?: string;
+    tipo_incidente?: string;
+    calle?: string;
+    numero?: string;
+    colonia?: string;
+    codigo_postal?: string;
+    ciudad?: string;
+    pais?: string;
+    referencias?: string;
+  }
+
+  /** Resultado al actualizar un incidente */
+  export interface UpdateIncidentResult {
+    success: boolean;
+    message: string;
+    incident?: {
+      id_incidente: number;
+      // ... los campos del incidente actualizado que el backend devuelve
+    };
+    errors?: Recordable<string[]>;
+  }
 }
 
+/** Interfaz para representar un incidente */
+export interface Incident {
+  id: number;
+  type: string;
+  otherType?: string;
+  briefDescription: string;
+  name: string;
+  phone: string;
+  personType: string;
+  date: string;
+  time: string;
+  priority?: string;
+  calle?: string;
+  numero?: string;
+  colonia?: string;
+  codigo_postal?: string;
+  ciudad?: string;
+  pais?: string;
+  referencias?: string;
+  operatorName?: string;
+  operatorRole?: string;
+  operatorId?: string;
+  submittedAt?: string;
+}
 /**
  * Función para crear un nuevo incidente.
  * Envía una solicitud POST al endpoint '/incidents/create/'.
@@ -75,10 +127,11 @@ export async function getIncidentApi(id: number) {
 
 /**
  * Función para actualizar un incidente.
- * Envía una solicitud PUT al endpoint '/incidents/{id}/'.
+ * Envía una solicitud PUT al endpoint '/incidents/{id}/update/'.
  */
-export async function updateIncidentApi(id: number, incidentData: Partial<IncidentApi.CreateIncidentParams>) {
-  return baseRequestClient.put(`/incidents/${id}/`, incidentData);
+export async function updateIncidentApi(id: number, incidentData: IncidentApi.UpdateIncidentParams): Promise<IncidentApi.UpdateIncidentResult> {
+  const response = await baseRequestClient.put(`/incidents/${id}/update/`, incidentData);
+  return response.data || response;
 }
 
 /**
