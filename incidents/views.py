@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import Incidente
 from .serializers import CreateIncidentSerializer, IncidenteSerializer, UpdateIncidentSerializer
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 import logging
 
 # Configurar logging para ver errores detallados
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 # todos los incidentes (GET)
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])  # Restaurar autenticación
 def get_incidentes(request):
     incidentes = Incidente.objects.all()
     serializer = IncidenteSerializer(incidentes, many=True)
@@ -20,7 +20,7 @@ def get_incidentes(request):
 
 # Crear (POST)
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])  # Restaurar autenticación
 def create_incidente(request):
     logger.info(f"Datos recibidos: {request.data}")
     
@@ -28,13 +28,15 @@ def create_incidente(request):
     if serializer.is_valid():
         try:
             logger.info("Datos validados correctamente, creando incidente...")
-            # PASO CLAVE: Asignar el usuario autenticado como operador
-            incidente = serializer.save(operatorId=None)  # No usar operatorId del frontend
-            incidente.id_usuario = request.user
+            incidente = serializer.save(operatorId=None)  
+            # Solo asignar usuario si está autenticado
+            if request.user and request.user.is_authenticated:
+                incidente.id_usuario = request.user
+            else:
+                incidente.id_usuario = None
             incidente.save()
             logger.info(f"Incidente creado exitosamente con ID: {incidente.id_incidente}")
             
-            # Respuesta que coincide con el tipo TypeScript del frontend
             response_data = {
                 'success': True,
                 'message': 'Incidente creado exitosamente',
@@ -82,7 +84,7 @@ def create_incidente(request):
 
 # Actualizar (PUT)
 @api_view(['PUT'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])  # Restaurar autenticación
 def update_incidente(request, id_incidente):
     try:
         incidente = Incidente.objects.get(pk=id_incidente)
@@ -168,7 +170,7 @@ def update_incidente(request, id_incidente):
 
 # Eliminar (DELETE)
 @api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])  # Restaurar autenticación
 def delete_incidente(request, id_incidente):
     try:
         incidente = Incidente.objects.get(pk=id_incidente)
@@ -192,7 +194,7 @@ def delete_incidente(request, id_incidente):
 
 # Obtener un incidente por ID (GET)
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])  # Temporalmente cambiar a AllowAny
 def get_incidente_by_id(request, id_incidente):
     try:
         incidente = Incidente.objects.get(pk=id_incidente)

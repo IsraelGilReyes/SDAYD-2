@@ -1,10 +1,6 @@
 import { defineStore } from 'pinia';
-<<<<<<< HEAD
-import { createIncidentApi, getIncidentsApi, deleteIncidentApi, type IncidentApi } from '#/api';
-=======
-import { createIncidentApi, getIncidentsApi, updateIncidentApi, type IncidentApi } from '#/api'; // Importa las nuevas funciones
-import { ElMessage } from 'element-plus'; // Para mostrar mensajes de éxito/error
->>>>>>> 0a132632943373060a9a5854e7d55c6c1dffe1b8
+import { createIncidentApi, getIncidentsApi, updateIncidentApi, deleteIncidentApi, type IncidentApi } from '#/api';
+import { ElMessage } from 'element-plus';
 
 export interface Incident {
   id?: number; // ID real de la base de datos
@@ -174,7 +170,6 @@ export const useIncidentsStore = defineStore('incidents', {
         return false;
       }
     },
-<<<<<<< HEAD
     async deleteIncident(id: number) {
       try {
         // Hacer la llamada al backend para eliminar el incidente
@@ -184,16 +179,19 @@ export const useIncidentsStore = defineStore('incidents', {
         if (index !== -1) {
           this.incidents.splice(index, 1);
         }
+        ElMessage.success('Incidente eliminado correctamente');
         return { success: true, message: 'Incidente eliminado correctamente' };
       } catch (error) {
         console.error('Error deleting incident:', error);
+        ElMessage.error('Error al eliminar el incidente');
         throw error;
       }
-=======
-
-    deleteIncident(index: number) {
-      this.incidents.splice(index, 1);
->>>>>>> 0a132632943373060a9a5854e7d55c6c1dffe1b8
+    },
+    setIncidents(incidents: Incident[]) {
+      this.incidents = incidents;
+    },
+    clearIncidents() {
+      this.incidents = [];
     },
   },
 }); 

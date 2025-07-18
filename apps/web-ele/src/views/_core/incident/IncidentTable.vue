@@ -332,7 +332,6 @@ function deleteIncident(index: number) {
     cancelButtonText: 'No',
     type: 'warning',
   })
-<<<<<<< HEAD
     .then(async () => {
       try {
         const incidentToDelete = paginatedIncidents.value[index];
@@ -349,15 +348,6 @@ function deleteIncident(index: number) {
       } catch (error) {
         console.error('Error al eliminar incidente:', error);
         ElMessage.error('Error al eliminar el incidente');
-=======
-    .then(() => {
-      const incident = paginatedIncidents.value[index];
-      if (incident && incident.id) {
-        const idToDelete = incident.id;
-        const idx = incidents.value.findIndex((i: Incident) => i.id === idToDelete);
-        if (idx !== -1) incidentsStore.deleteIncident(idx);
-        ElMessage.success('Incidente eliminado');
->>>>>>> 0a132632943373060a9a5854e7d55c6c1dffe1b8
       }
     })
     .catch(() => {
