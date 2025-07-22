@@ -52,16 +52,6 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        name: 'UserManagement',
-        path: '/dashboard/user-management',
-        component: () => import('../../../views/dashboard/test.vue'),
-        meta: {
-          icon: 'lucide:users-cog',
-          title: 'Administración de Usuarios',
-          authority: ['administrador'],
-        },
-      },
-      {
         name: 'ListaIncidentes',
         path: '/dashboard/lista-incidentes',
         component: () => import('../../../views/_core/incident/IncidentTable.vue'),

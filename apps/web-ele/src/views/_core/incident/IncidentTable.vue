@@ -335,6 +335,13 @@ function deleteIncident(index: number) {
     .then(async () => {
       try {
         const incidentToDelete = paginatedIncidents.value[index];
+        
+        // Validar que el incidente existe
+        if (!incidentToDelete) {
+          ElMessage.error('No se puede eliminar: Incidente no encontrado en el índice especificado');
+          return;
+        }
+        
         const incidentId = incidentToDelete.id;
         
         if (!incidentId) {
